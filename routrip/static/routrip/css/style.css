@@ -1,0 +1,153 @@
+/* ==========================
+   変数・リセット
+========================== */
+:root {
+    --color-navy: #2E5C8A;
+    --color-purple: #6FA8DC;
+    --color-lavender: #F5F9FF;
+    --color-gold: #F5C86B;
+    --color-white: #FFFFFF;
+    --color-gray-text: #5C6B7A;
+    --color-danger: #C0392B;
+
+    --radius: 10px;
+    --spacing: 16px;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    font-family: "Hiragino Sans", "Yu Gothic", sans-serif;
+    background-color: var(--color-lavender);
+    color: var(--color-navy);
+    line-height: 1.6;
+}
+
+a {
+    color: var(--color-navy);
+    text-decoration: none;
+}
+
+/* ==========================
+   ヘッダー
+========================== */
+header {
+    background-color: var(--color-navy);
+    color: var(--color-white);
+    padding: 12px var(--spacing);
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+
+header h1 {
+    font-size: 16px;
+    margin: 0 0 8px 0;
+}
+
+header h1 a {
+    color: var(--color-white);
+}
+
+header nav {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 12px;
+    font-size: 13px;
+}
+
+header nav span {
+    color: var(--color-gold);
+    font-weight: bold;
+}
+
+header nav a {
+    color: var(--color-white);
+    opacity: 0.9;
+}
+
+header nav form button {
+    background: none;
+    border: none;
+    color: var(--color-white);
+    opacity: 0.9;
+    font-size: 13px;
+    padding: 0;
+    cursor: pointer;
+}
+
+/* ==========================
+   本文レイアウト
+========================== */
+main {
+    padding: var(--spacing);
+    max-width: 480px;
+    margin: 0 auto;
+}
+
+h2 {
+    font-size: 19px;
+    margin-top: 0;
+}
+
+footer {
+    text-align: center;
+    font-size: 11px;
+    color: var(--color-gray-text);
+    padding: 24px var(--spacing);
+}
+
+/* ==========================
+   ボタン
+========================== */
+button,
+input[type="submit"] {
+    background-color: var(--color-gold);
+    color: var(--color-navy);
+    border: none;
+    border-radius: var(--radius);
+    padding: 10px 20px;
+    font-size: 14px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+button:active {
+    opacity: 0.85;
+}
+
+/* ==========================
+   フォーム
+========================== */
+form p {
+    margin: 0 0 14px 0;
+}
+
+form label {
+    display: block;
+    font-size: 13px;
+    color: var(--color-gray-text);
+    margin-bottom: 4px;
+}
+
+input,
+select,
+textarea {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #cfc9e6;
+    border-radius: var(--radius);
+    font-size: 14px;
+    background-color: var(--color-white);
+    color: var(--color-navy);
+}
+
+input[type="radio"],
+input[type="checkbox"] {
+    width: auto;
+    margin-right: 6px;
+}
