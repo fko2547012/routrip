@@ -4,6 +4,6 @@ from ..forms.account import SignUpForm
 
 class SignUpView(CreateView):
     form_class=SignUpForm
-    template_name="signup.html"
+    template_name="routrip/signup.html"
     success_url=reverse_lazy("login")
     
