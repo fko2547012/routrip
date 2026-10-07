@@ -57,6 +57,10 @@ class Log(models.Model):
     
     updated_at=models.DateTimeField(auto_now=True,
                                 db_column='UPDATED_AT')
+    
+    tags=models.ManyToManyField('tag',
+                                blank=True,
+                                related_name='logs',)
     class Meta:
         db_table='LOG'
         
@@ -159,3 +163,19 @@ class section(models.Model):
         
     def __str__(self):
         return f"Section {self.id}"
+
+class tag(models.Model):
+    id=models.AutoField(primary_key=True,
+                        db_column='ID')
+    
+    name=models.CharField(max_length=30,
+                        unique=True,
+                        db_column='NAME')
+    
+    class Meta:
+        db_table='TAG'
+        
+    def __str__(self):
+        return self.name
+    
+    
