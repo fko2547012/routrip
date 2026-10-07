@@ -1,6 +1,7 @@
 from django.urls import path
-from . import views
+from .views.top_page import TopPageView
+
 app_name = 'routrip'
 urlpatterns = [
-    path('', views.IndexView.as_view(), name='index'),
+    path('', TopPageView.as_view(), name='top_page')
 ]
