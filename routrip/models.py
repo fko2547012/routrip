@@ -103,7 +103,7 @@ class Logcard(models.Model):
                             db_column='SPOT_ID',
                             related_name='log_cards')
     
-    image_path=models.CharField(max_length=225,
+    image_path=models.CharField(max_length=255,
                             null=True,
                             blank=True,
                             db_column='IMAGE_PATH')
