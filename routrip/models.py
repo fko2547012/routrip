@@ -125,3 +125,37 @@ class Logcard(models.Model):
         
     def __str__(self):
         return f"Logcard {self.id}"
+    
+class section(models.Model):
+    id=models.AutoField(primary_key=True,
+                        db_column='ID')
+    
+    log=models.ForeignKey('Log',
+                            on_delete=models.CASCADE,
+                            db_column='LOG_ID',
+                            related_name='sections')
+    
+    from_spot=models.ForeignKey('Spot',
+                                    on_delete=models.PROTECT,
+                                    db_column='START_SPOT_ID',
+                                    related_name='departing_sections')
+    
+    to_spot=models.ForeignKey('Spot',
+                                    on_delete=models.PROTECT,
+                                    db_column='TO_SPOT_ID',
+                                    related_name='arriving_sections')
+    
+    section_order=models.IntegerField(db_column='SECTION_ORDER')
+    
+    transport=models.CharField(max_length=10,
+                            db_column='TRANSPORT')
+    
+    duration=models.IntegerField(null=True,
+                                blank=True,
+                                db_column='DURATION_MIN')
+
+    class Meta:
+        db_table='SEGMENT'
+        
+    def __str__(self):
+        return f"Section {self.id}"
