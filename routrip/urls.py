@@ -1,6 +1,6 @@
 from django.urls import path
 from .views.top_page import TopPageView
-from .views.signup import SignUpView
+from .views.account import SignUpView
 
 app_name = 'routrip'
 urlpatterns = [
