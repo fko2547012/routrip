@@ -40,6 +40,8 @@ INSTALLED_APPS = [
     'routrip',
 ]
 
+AUTH_USER_MODEL = 'routrip.User'
+
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
