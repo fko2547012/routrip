@@ -38,7 +38,7 @@ class Log(models.Model):
                                     db_column='START_SPOT_ID',
                                     related_name='start_logs')
     
-    thumbnail_card=models.ForeignKey('LogCard', 
+    thumbnail_card=models.ForeignKey('Logcard', 
                                 on_delete=models.SET_NULL,
                                 db_column='THUMBNAIL_CARD_ID',
                                 related_name='thumbnail_logs',
@@ -85,4 +85,43 @@ class Spot(models.Model):
         def __str__(self):
             return self.name
 
+class Logcard(models.Model):
+    id=models.AutoField(primary_key=True,
+                        db_column='ID')
     
+    log=models.ForeignKey('Log',
+                            on_delete=models.CASCADE,
+                            db_column='LOG_ID',
+                            related_name='cards')
+    
+    spot=models.ForeignKey('Spot',
+                            on_delete=models.PROTECT,
+                            db_column='SPOT_ID',
+                            related_name='log_cards')
+    
+    image_path=models.CharField(max_length=225,
+                            null=True,
+                            blank=True,
+                            db_column='IMAGE_PATH')
+    
+    taken_at=models.DateTimeField(null=True,
+                                blank=True,
+                                db_column='TAKEN_AT')
+    
+    latitude=models.FloatField(null=True,
+                            blank=True,
+                            db_column='LATITUDE')
+    
+    longitude=models.FloatField(null=True,
+                            blank=True,
+                            db_column='LONGITUDE')
+    
+    comment=models.TextField(db_column='COMMENT')
+    
+    display_order=models.IntegerField(db_column='DISPLAY_ORDER')
+    
+    class Meta:
+        db_table='LOGCARD'
+        
+    def __str__(self):
+        return f"Logcard {self.id}"
