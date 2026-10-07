@@ -9,7 +9,7 @@ class User(AbstractUser):
                             unique=True,
                             db_column='LOGIN_ID')
     
-    password=models.CharField(max_length=50,
+    password=models.CharField(max_length=128,
                             db_column='PASSWORD')
     
     display_name=models.CharField(max_length=10,
@@ -130,7 +130,7 @@ class Logcard(models.Model):
     def __str__(self):
         return f"Logcard {self.id}"
     
-class section(models.Model):
+class Section(models.Model):
     id=models.AutoField(primary_key=True,
                         db_column='ID')
     
@@ -164,7 +164,7 @@ class section(models.Model):
     def __str__(self):
         return f"Section {self.id}"
 
-class tag(models.Model):
+class Tag(models.Model):
     id=models.AutoField(primary_key=True,
                         db_column='ID')
     
