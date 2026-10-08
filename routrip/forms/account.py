@@ -15,10 +15,10 @@ class SignUpForm(UserCreationForm):
 class LoginForm(AuthenticationForm):
     #ログインフォーム
     username=forms.CharField(
-        label="ユーザー名",
+        label="ログインID",
         widget=forms.TextInput(attrs={
             'class': 'form-control',
-            'placeholder': 'ユーザー名を入力してください',
+            'placeholder': 'ログインIDを入力してください',
 
         })
         )
