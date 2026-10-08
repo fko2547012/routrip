@@ -151,3 +151,14 @@ input[type="checkbox"] {
     width: auto;
     margin-right: 6px;
 }
+
+/* ==========================
+   ログ
+========================== */
+.card {
+    background-color: var(--color-white);
+    border-radius: var(--radius);
+    padding: var(--spacing);
+    box-shadow: 0 2px 8px rgba(36, 30, 78, 0.08);
+    margin-bottom: var(--spacing);
+}
