@@ -1,0 +1,10 @@
+{% extends 'routrip/base.html' %}
+
+{% block content %}
+    <h2>ログアウト</h2>
+    <p>ログアウトしますか？</p>
+    <form method="post">
+        {% csrf_token %}
+        <button type="submit">ログアウト</button>
+    </form>
+{% endblock %}
