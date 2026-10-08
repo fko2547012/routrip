@@ -10,7 +10,7 @@ class SignUpForm(UserCreationForm):
 
     class Meta(UserCreationForm.Meta):
         model=User
-        fields=("username",)
+        fields=("username","display_name")
 
 class LoginForm(AuthenticationForm):
     #ログインフォーム
