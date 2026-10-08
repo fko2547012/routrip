@@ -6,11 +6,11 @@ from django.contrib.auth.forms import AuthenticationForm
 User=get_user_model()
 
 class SignUpForm(UserCreationForm):
-    email = forms.EmailField(required=True, label="メールアドレス")
+    
 
     class Meta(UserCreationForm.Meta):
         model=User
-        fields=("username","email")
+        fields=("username",)
 
 class LoginForm(AuthenticationForm):
     #ログインフォーム
