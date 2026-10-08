@@ -5,6 +5,14 @@
     <form method="post">
         {% csrf_token %}
         {{ form.as_p }}
+        <input type="checkbox" id="showPassword">パスワードを表示
+        <script>
+            document.getElementById('showPassword').addEventListener('change', function() {
+            const passwordField = document.getElementById('id_password');
+            passwordField.type = this.checked ? 'text' : 'password';
+            });
+        </script>
+        <br>
         <button type="submit">ログイン</button>
     </form>
 {% endblock %}
