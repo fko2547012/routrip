@@ -112,11 +112,13 @@ class Logcard(models.Model):
                             related_name='log_cards',
                             verbose_name='スポット')
     
-    image_path=models.CharField(max_length=255,
+    image_path=models.ImageField(
+                            upload_to='photos/',
+                            max_length=255,
                             null=True,
                             blank=True,
                             db_column='IMAGE_PATH',
-                            verbose_name='画像パス')
+                            verbose_name='画像')
     
     taken_at=models.DateTimeField(null=True,
                                 blank=True,
