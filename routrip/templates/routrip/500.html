@@ -1,13 +1,10 @@
-<html lang="ja">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>000</title>
-    <!--css読み込み用-->
-    <link rel="">
-</head>
-<body>
+{% extends "routrip/base.html" %}
+
+{% block content %}
+
+<div class="error-page">
     <h1>500 Internal Server Error</h1>
-    <p>サーバー内部エラーが発生しました。</p>
-</body>
-</html>
+    <p>サーバーでエラーが発生しました。</p>
+</div>
+
+{% endblock %}
