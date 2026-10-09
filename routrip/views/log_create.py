@@ -1,5 +1,7 @@
+from django.views import View
 from django.views.generic.edit import CreateView
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.shortcuts import render, redirect
 from django.urls import reverse_lazy
 
 from ..models import Log, Tag
@@ -51,3 +53,15 @@ class LogCreateView(LoginRequiredMixin, CreateView):
 
     # def success_url(self):
     #     pass
+
+class LogImageSelectView(LoginRequiredMixin, View):
+    """
+    ログ作成時の画像選択ビュー
+    """
+    template_name = 'routrip/log_create_images.html'
+
+    def get(self, request):
+        """
+        画像選択画面を表示する
+        """
+        return render(request, self.template_name)
