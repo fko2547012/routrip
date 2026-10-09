@@ -20,7 +20,7 @@ class LogDetailView(LoginRequiredMixin, DetailView):
             .filter(Q(user__is_public=True)
                     | Q(user=self.request.user)
                     )
-        .self_related('user','start_spot')
+        .select_related('user', 'start_spot')
         )
         
     def get(self, request, *args, **kwargs):
