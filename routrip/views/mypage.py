@@ -16,7 +16,13 @@ class MypageView(LoginRequiredMixin, TemplateView):
         return context
 
     def post(self, request, *args, **kwargs):
+        action = request.POST.get("action")
+        if action == "name":
         # ユーザー名保存
-        request.user.display_name = request.POST["display_name"]
+            request.user.display_name = request.POST("display_name")
+        elif action == "privacy":
+        # 公開設定
+            request.user.is_public = (request.POST.get("is_public") == "True")
+        
         request.user.save()
         return redirect("routrip:mypage")

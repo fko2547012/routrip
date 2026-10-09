@@ -6,11 +6,24 @@
         <form method="post">
             {% csrf_token %}
             <input type="text" name="display_name" value="{{ user.display_name }}">
-            <button type="submit">保存</button>
+            <button type="submit" name="action" value="name">保存</button>
         </form>
     {% else %}
         <p>{{ user.display_name }} <a href='?edit=1'>✎</a></p>
     {% endif %}
+
+    <form method="post">
+        {% csrf_token %}
+        <label>
+            <input type="radio" name="is_public" value="True" {% if user.is_public %}checked{% endif %}>
+            公開アカウント
+        </label>
+        <label>
+            <input type="radio" name="is_public" value="False" {% if not user.is_public %}checked{% endif %}>
+            非公開アカウント
+        </label>
+        <button type="submit" name="action" value="privacy">保存</button>
+    </form>
 
     <hr>
 

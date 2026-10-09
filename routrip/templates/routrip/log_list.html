@@ -1,2 +1,23 @@
 <!--ログ一覧表示エリア-->
-<div class="list-group "
+<div class="log-list-container">
+    {% for log in logs%}
+        <div class="log-card">
+            <a href="#" class="log-card-link">
+                <span class="logtitle">{{ log.title  }}</span>
+            </a> 
+        </div>
+        
+    {% empty %}
+        <!--空状態の表示メッセージ-->
+        <div class="empty-state">
+            {% if is_searched %}
+            <!--logの中身が空だった場合-->
+                <p class="empty-message">該当するログが見つかりませんでした</p>
+            {% else %}
+            <!--検索結果が０件だった場合-->
+                <p class="empty-message">登録されているログがありません</p>
+            {% endif %}
+        </div>
+    {% endfor %}
+
+</div>

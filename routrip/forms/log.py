@@ -1,7 +1,9 @@
 from django import forms
 from django.forms import ModelForm
-from ..models import Log
+from django.forms import inlineformset_factory
+from ..models import Log, Logcard
 import re
+
 
 class LogForm(ModelForm):
     '''
@@ -42,3 +44,11 @@ class LogForm(ModelForm):
             if len(name) > 30:
                 raise forms.ValidationError('タグは30文字以内にしてください')
         return names  
+
+
+LogCardFormSet = inlineformset_factory( #カードを複数枚作成するフォームセット
+    Log, Logcard,
+    fields=['spot', 'image_path', 'comment'],
+    extra=3,    #カードを3枚表示
+    can_delete=False,
+)
