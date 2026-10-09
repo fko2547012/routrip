@@ -4,7 +4,7 @@
     <div class="toppage-container">
         <!--検索エリア-->
         <div class="search-section">
-            <from method="get" action="{% url 'routrip:top_page' %}" class"search-form">
+            <form method="get" action="{% url 'routrip:top_page' %}" class="search-form">
                 <div class="form-group">
                      <label for = "id_departure" class="form-label">出発地</label>
                      <input type="text" id="id_departure" name="departure" class="form-input" placeholder="出発地" value="{{departure}}" >
@@ -13,8 +13,8 @@
                     <label for ="id_destination" class="form-label">目的地</label> 
                     <input type="text" id="id_destination" name="destination" class="form-input" placeholder="目的地" value="{{destination}}"> 
                 </div>
-                <button tyoe="submit" class="search-button">検索</button> 
-            </from>
+                <button type="submit" class="search-button">検索</button> 
+            </form>
         </div>
         
         <!--ログ一覧エリア-->

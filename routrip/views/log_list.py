@@ -5,26 +5,26 @@ from ..models import Log
 
 class LogListView(ListView):
     model = Log
-    paginate_by = int
+    paginate_by = 10
     context_object_name = 'logs'
     template_name = 'routrip/top_page.html'
 
     def get_queryset(self):
         queryset = super().get_queryset().order_by('-created_at')
 
-        departure=self.request.GET.get('departure').strip()
-        destination=self.request.GET.get('destination').strip()
+        departure=self.request.GET.get('departure','').strip()
+        destination=self.request.GET.get('destination','').strip()
 
         #出発地キーワードでの絞り込み
         if departure:
             queryset = queryset.filter(
-                Q(title_icon__icontains=departure) | Q(departure__icontains=departure)
+                Q(title__icontains=departure) | Q(departure__icontains=departure)
             )
 
         #目的地キーワードでの絞り込み
         if destination:
             queryset = queryset.filter(
-                Q(title_icon__icontains=destination) | Q(destination__icontains=destination)
+                Q(title__icontains=destination) | Q(destination__icontains=destination)
             )
 
         return queryset
