@@ -2,10 +2,18 @@
 
 {% block content %}
     <h2>マイページ</h2>
-    <hr>
-    <p>{{ user.display_name }}</p>
+    {% if editing %}
+        <form method="post">
+            {% csrf_token %}
+            <input type="text" name="display_name" value="{{ user.display_name }}">
+            <button type="submit">保存</button>
+        </form>
+    {% else %}
+        <p>{{ user.display_name }} <a href='?edit=1'>✎</a></p>
+    {% endif %}
 
     <hr>
+
     {% for log in mylog %}
     <div class="log-list">
         {{ log.thumbnail_card }}
