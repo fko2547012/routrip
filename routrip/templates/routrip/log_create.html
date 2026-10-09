@@ -2,7 +2,7 @@
 
 {% block content %}
 <h2>ログ作成</h2>
-<form method="post" enctype="multipart/form-data">
+<form method="post" enctype="multipart/form-data" novalidate>
   {% csrf_token %}
   {{ form.as_p }}
 

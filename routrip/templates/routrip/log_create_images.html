@@ -1,0 +1,13 @@
+{% extends 'routrip/base.html' %}
+
+{% block content %}
+<h2>ログ作成</h2>
+<p>ログに使う画像を選択してください</p>
+<form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+
+    <input type="file" name="images" multiple accept="image/*">
+    <button type="submit">次へ</button>
+</form>
+
+{% endblock %}

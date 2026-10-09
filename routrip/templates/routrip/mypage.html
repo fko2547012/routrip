@@ -6,6 +6,9 @@
         <form method="post">
             {% csrf_token %}
             <input type="text" name="display_name" value="{{ user.display_name }}">
+            {% if name_error %}
+                <p>{{ name_error }}</p>
+            {% endif %}
             <button type="submit" name="action" value="name">保存</button>
         </form>
     {% else %}

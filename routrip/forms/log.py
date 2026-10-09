@@ -21,13 +21,19 @@ class LogForm(ModelForm):
             'trip_start_date': forms.DateInput(attrs={'type': 'date'}),
             'trip_end_date': forms.DateInput(attrs={'type': 'date'}),
         }
+        error_messages = {
+            'title': {'required': 'タイトルを入力してください'},
+            'trip_start_date': {'required': '開始日を入力してください'},
+            'trip_end_date': {'required': '終了日を入力してください'},
+        }
+                
 
     def clean(self):
         cleaned = super().clean()
         start = cleaned.get('trip_start_date')
         end = cleaned.get('trip_end_date')
         if start and end and end < start:
-            raise forms.ValidationError('終了日は開始日以降にしてください')
+            self.add_error('trip_end_date', '終了日は開始日以降にしてください')
         return cleaned
 
     def clean_tag_text(self):

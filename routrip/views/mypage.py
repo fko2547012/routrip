@@ -19,7 +19,13 @@ class MypageView(LoginRequiredMixin, TemplateView):
         action = request.POST.get("action")
         if action == "name":
         # ユーザー名保存
-            request.user.display_name = request.POST("display_name")
+            display_name = request.POST.get("display_name", "").strip()
+            if display_name == "":
+                context = self.get_context_data(**kwargs)
+                context['name_error'] = "表示名を入力してください"
+                return self.render_to_response(context)
+            request.user.display_name = display_name
+            
         elif action == "privacy":
         # 公開設定
             request.user.is_public = (request.POST.get("is_public") == "True")
