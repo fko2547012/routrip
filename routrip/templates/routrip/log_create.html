@@ -2,9 +2,18 @@
 
 {% block content %}
 <h2>ログ作成</h2>
-<form method="post">
+<form method="post" enctype="multipart/form-data">
   {% csrf_token %}
   {{ form.as_p }}
+
+  <h3>カード</h3>
+  {{ formset.management_form }}
+  {% for card_form in formset %}
+    <div class="card-form">
+      {{ card_form.as_p }}
+    </div>
+  {% endfor %}
+
   <button type="submit">保存</button>
 </form>
 {% endblock %}
