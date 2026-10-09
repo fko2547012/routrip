@@ -1,0 +1,18 @@
+{% extends 'routrip/base.html' %}
+
+{% block content %}
+    <h2>マイページ</h2>
+    <hr>
+    <p>{{ user.display_name }}</p>
+
+    <hr>
+    {% for log in mylog %}
+    <div class="log-list">
+        {{ log.thumbnail_card }}
+        {{ log.title }}
+    </div>
+
+    {% empty %}
+        <p>投稿したログがありません。</p>
+    {% endfor %}
+{% endblock %}

@@ -14,7 +14,7 @@
         {% if user.is_authenticated %}
             <span>{{ user.username }}さん</span>
             <a href="{% url 'routrip:top_page' %}">トップページ</a>
-            <a href="#">マイページ</a>
+            <a href="{% url 'routrip:mypage' %}">マイページ</a>
             <a href="{% url 'routrip:logout' %}">ログアウト</a>
         {% else %}
             <a href="{% url 'routrip:top_page' %}">トップページ</a>
