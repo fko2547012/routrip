@@ -2,6 +2,7 @@ from django.urls import path
 from .views.top_page import TopPageView
 from .views.account import SignUpView,CustomLoginView,CustomLogoutView
 from .views.log_list import LogListView
+from .views.mypage import MypageView
 
 app_name = 'routrip'
 urlpatterns = [
@@ -10,4 +11,5 @@ urlpatterns = [
     path('login/', CustomLoginView.as_view(), name='login'),
     path('logout/', CustomLogoutView.as_view(), name='logout'),
     path('log_list/', LogListView.as_view(), name='log_list'),
+    path('mypage/', MypageView.as_view(), name='mypage'),
 ]
