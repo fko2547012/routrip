@@ -15,5 +15,5 @@ urlpatterns = [
     path('log_list/', LogListView.as_view(), name='log_list'),
     path('mypage/', MypageView.as_view(), name='mypage'),
     path('log_create/', LogCreateView.as_view(), name='log_create'),
-    path('log_detail/', LogDetailView.as_view(), name='log_detail'),
+    path('log_detail/<int:pk>/', LogDetailView.as_view(), name='log_detail'),
 ]
