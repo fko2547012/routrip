@@ -5,6 +5,7 @@ from .views.log_list import LogListView
 from .views.mypage import MypageView
 from .views.log_create import LogCreateView
 from .views.log_detail import LogDetailView
+from .views.log_edit import LogUpdateView
 
 app_name = 'routrip'
 urlpatterns = [
@@ -16,4 +17,5 @@ urlpatterns = [
     path('mypage/', MypageView.as_view(), name='mypage'),
     path('log_create/', LogCreateView.as_view(), name='log_create'),
     path('log_detail/<int:pk>/', LogDetailView.as_view(), name='log_detail'),
+    path('log_edit/<int:pk>/', LogUpdateView.as_view(), name='log_edit'),
 ]
