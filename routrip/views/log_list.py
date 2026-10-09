@@ -1,6 +1,6 @@
 from django.views.generic import ListView
 from django.db.models import Q
-from models import Log
+from ..models import Log
 
 
 class LogListView(ListView):
