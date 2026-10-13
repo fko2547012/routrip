@@ -26,6 +26,7 @@ document.getElementById('card-list').addEventListener('change', (e) => {
   const file = input.files[0];
   if (!file) {  // 選択を取り消したとき
     if (img) img.remove();
+    renderThumbs();
     return;
   }
 
@@ -36,6 +37,7 @@ document.getElementById('card-list').addEventListener('change', (e) => {
     box.prepend(img); // 画像を、四角の一番上に入れる
   }
   img.src = URL.createObjectURL(file);
+  renderThumbs();
 });
 
 
@@ -66,6 +68,7 @@ document.getElementById('card-list').addEventListener('click', (e) => {
 
   card.remove();
   renumberCards();
+  renderThumbs();
 });
 
 
@@ -138,3 +141,62 @@ tagChips.addEventListener('click', (e) => {
 tagInput.closest('form').addEventListener('submit', addTagsFromInput);
 
 renderTags();
+
+
+// ==========================
+// サムネイル選択
+// ==========================
+const thumbList = document.getElementById('thumb-list');
+let thumbCard = null;   // 選ばれているカード（画面上の要素）
+
+function renderThumbs() {
+  const cards = [...document.querySelectorAll('#card-list > .card-form')];
+  thumbList.innerHTML = '';
+  let firstRadio = null;
+  let firstCard = null;
+  let hasSelected = false;
+
+  cards.forEach((card, i) => {
+    const preview = card.querySelector('.preview');
+    if (!preview) return;                       // 写真の無いカードは、並べない
+
+    const label = document.createElement('label');
+    label.className = 'thumb';
+
+    const radio = document.createElement('input');
+    radio.type = 'radio';
+    radio.name = 'thumbnail';
+    radio.value = i;                            // 何枚目のカードか
+    if (card === thumbCard) {
+      radio.checked = true;
+      hasSelected = true;
+    }
+    radio.addEventListener('change', () => { thumbCard = card; });
+
+    const img = document.createElement('img');
+    img.src = preview.src;
+    img.alt = '';
+
+    const check = document.createElement('span');
+    check.className = 'thumb-check';
+    check.textContent = '✓';
+
+    label.append(radio, img, check);
+    thumbList.append(label);
+
+    if (!firstRadio) {
+      firstRadio = radio;
+      firstCard = card;
+    }
+  });
+
+  // 何も選ばれていなければ、最初の写真を選んだ状態にする
+  if (!hasSelected && firstRadio) {
+    firstRadio.checked = true;
+    thumbCard = firstCard;
+  } else if (!hasSelected) {
+    thumbCard = null;
+  }
+}
+
+renderThumbs();

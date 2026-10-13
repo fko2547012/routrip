@@ -54,6 +54,11 @@
     {{ form.tag_text }}
   </section>
 
+    <section id="thumb-section">
+    <h3>サムネイルの画像選択</h3>
+    <div id="thumb-list"></div>
+  </section>
+
   {% if form.errors or formset.total_error_count %}
     <p class="errorlist">入力内容を確認してください。</p>
   {% endif %}
