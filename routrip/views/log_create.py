@@ -46,7 +46,8 @@ class LogCreateView(LoginRequiredMixin, CreateView):
 
         prev_spot = self.object.start_spot  # 最初の出発側は、出発スポット
         order = 0
-        for card_form in formset.forms:
+        saved_cards = {}
+        for index, card_form in enumerate(formset.forms):
             if not card_form.has_changed(): # 何も入力されていない欄は無視
                 continue
             order += 1
@@ -54,6 +55,7 @@ class LogCreateView(LoginRequiredMixin, CreateView):
             card.log = self.object
             card.display_order = order
             card.save() # カードを保存
+            saved_cards[index] = card  # 保存したカードを記録
 
             Section.objects.create( # 手前の移動区間を保存
                 log=self.object,
@@ -64,6 +66,16 @@ class LogCreateView(LoginRequiredMixin, CreateView):
                 duration=card_form.cleaned_data['duration'],
             )
             prev_spot = card.spot   # 次のカードの出発側にする
+
+        value = self.request.POST.get('thumbnail', '')
+        thumb_card = saved_cards.get(int(value)) if value.isdigit() else None
+        if thumb_card is None:                                  # 選ばれていなければ、最初の写真のカード
+            thumb_card = next(
+                (c for c in saved_cards.values() if c.image_path), None)
+        self.object.thumbnail_card = thumb_card
+        self.object.save(update_fields=['thumbnail_card'])
+
+        
         return response
 
     # def success_url(self):
