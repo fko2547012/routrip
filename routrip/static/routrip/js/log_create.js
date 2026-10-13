@@ -1,3 +1,6 @@
+// ==========================
+// カードの追加・削除・写真プレビュー
+// ==========================
 // 「カードを追加」ボタンを押したら、フォームのセットを追加する
 document.getElementById('add-card').addEventListener('click', () => {
   const totalInput = document.querySelector('[name$="-TOTAL_FORMS"]');
@@ -200,3 +203,142 @@ function renderThumbs() {
 }
 
 renderThumbs();
+
+
+// ==========================
+// 画面の切り替え
+// ==========================
+const steps = document.querySelectorAll('.step');
+const step2 = document.getElementById('step-2');
+const step2Error = document.getElementById('step2-error');
+
+function showStep(n) {
+  steps.forEach((s) => s.classList.toggle('is-active', s.id === `step-${n}`));
+  window.scrollTo(0, 0);
+}
+
+// 画面2で、必須の項目
+const REQUIRED = [
+  '[name="title"]',
+  '[name="trip_start_date"]',
+  '[name="trip_end_date"]',
+  '[name="start_spot"]',
+  '[name$="-transport"]',
+  '[name$="-spot"]',
+  '[name$="-comment"]',
+].join(',');
+
+// 画面2 → 画面3
+document.getElementById('to-step-3').addEventListener('click', () => {
+  const empty = [...step2.querySelectorAll(REQUIRED)]
+    .filter((el) => el.value.trim() === '');
+
+  step2.querySelectorAll('.invalid').forEach((el) => el.classList.remove('invalid'));
+
+  if (empty.length > 0) {
+    empty.forEach((el) => el.classList.add('invalid'));
+    step2Error.hidden = false;
+    empty[0].scrollIntoView({ block: 'center' });
+    return;
+  }
+  step2Error.hidden = true;
+  showStep(3);
+});
+
+// 入力し直したら、赤枠を消す
+step2.addEventListener('input', (e) => e.target.classList.remove('invalid'));
+step2.addEventListener('change', (e) => e.target.classList.remove('invalid'));
+
+// 画面3 → 画面2
+document.getElementById('back-to-2').addEventListener('click', () => showStep(2));
+
+// 入力欄でEnterを押しても、フォームを送信させない
+document.getElementById('log-form').addEventListener('keydown', (e) => {
+  if (e.key === 'Enter' && e.target.tagName === 'INPUT') {
+    e.preventDefault();
+  }
+});
+
+
+// ==========================
+// 画面1：画像選択
+// ==========================
+const picker = document.getElementById('image-picker');
+const pickedList = document.getElementById('picked-list');
+let pickedFiles = [];
+// 画面2から始まったとき（エラーで戻ってきたとき）は、カードを作り直さない
+let appliedKey = step2.classList.contains('is-active') ? '' : null;
+
+// 選ばれた写真が、前と同じかを見分けるための文字列
+function fileKey(files) {
+  return files.map((f) => `${f.name}:${f.size}:${f.lastModified}`).join('|');
+}
+
+// 選んだ写真のファイル名を、一覧に出す
+picker.addEventListener('change', () => {
+  pickedFiles = [...picker.files];
+  pickedList.innerHTML = '';
+  pickedFiles.forEach((f) => {
+    const li = document.createElement('li');
+    li.textContent = f.name;
+    pickedList.append(li);
+  });
+});
+
+// カード1枚分の入力を、空に戻す
+function resetCard(card) {
+  card.querySelectorAll('input[type="file"], textarea, select').forEach((el) => {
+    el.value = '';
+  });
+  const preview = card.querySelector('.preview');
+  if (preview) {
+    URL.revokeObjectURL(preview.src);
+    preview.remove();
+  }
+}
+
+// カードの写真の欄に、1枚の写真を入れる
+function setFile(card, file) {
+  const input = card.querySelector('input[type="file"]');
+  const dt = new DataTransfer();
+  dt.items.add(file);
+  input.files = dt.files;
+  input.dispatchEvent(new Event('change', { bubbles: true }));   // プレビューを出す
+}
+
+// 写真の数だけカードを作って、写真を入れる
+function buildCards(files) {
+  const cardList = document.getElementById('card-list');
+
+  // 1枚目を残して、あとのカードは消す
+  [...cardList.querySelectorAll(':scope > .card-form')].slice(1).forEach((card) => {
+    const preview = card.querySelector('.preview');
+    if (preview) URL.revokeObjectURL(preview.src);
+    card.remove();
+  });
+  renumberCards();
+  resetCard(cardList.querySelector(':scope > .card-form'));
+
+  // 足りない分は、「カードを追加」ボタンを押したことにして、増やす
+  const need = Math.max(files.length, 1);
+  for (let i = 1; i < need; i++) {
+    document.getElementById('add-card').click();
+  }
+
+  const cards = cardList.querySelectorAll(':scope > .card-form');
+  files.forEach((file, i) => setFile(cards[i], file));
+  renderThumbs();
+}
+
+// 画面1 → 画面2
+document.getElementById('to-step-2').addEventListener('click', () => {
+  const key = fileKey(pickedFiles);
+  if (key !== appliedKey) {          // 選び方が変わったときだけ、カードを作り直す
+    buildCards(pickedFiles);
+    appliedKey = key;
+  }
+  showStep(2);
+});
+
+// 画面2 → 画面1
+document.getElementById('back-to-1').addEventListener('click', () => showStep(1));

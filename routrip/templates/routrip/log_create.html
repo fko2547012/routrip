@@ -2,68 +2,96 @@
 {% load static %}
 
 {% block content %}
-<form method="post" enctype="multipart/form-data" novalidate>
+<form method="post" enctype="multipart/form-data" novalidate id="log-form">
   {% csrf_token %}
-  {{ form.non_field_errors }}
 
-  <div class="field">
-    {{ form.title.errors }}
-    {{ form.title }}
+  {# ===== 画面1：画像選択 ===== #}
+  <div class="step{% if not form.is_bound %} is-active{% endif %}" id="step-1">
+    <a class="back-button" href="{% url 'routrip:top_page' %}">← 戻る</a>
+    <h2 class="step1-title">ログ作成</h2>
+    <p class="step1-lead">ログに使う画像を選択してください</p>
+
+    <input type="file" id="image-picker" accept="image/*" multiple hidden>
+    <label for="image-picker" class="pick-button">画像を選択</label>
+
+    <ul id="picked-list" class="picked-list"></ul>
+
+    <button type="button" class="next-button" id="to-step-2">次へ →</button>
   </div>
 
-  <div class="date-row">
+  {# ===== 画面2：入力 ===== #}
+  <div class="step{% if form.is_bound %} is-active{% endif %}" id="step-2">
+    <button type="button" class="back-button" id="back-to-1">← 戻る</button>
+    {{ form.non_field_errors }}
+
     <div class="field">
-      {{ form.trip_start_date.errors }}
-      {{ form.trip_start_date }}
+      {{ form.title.errors }}
+      {{ form.title }}
     </div>
-    <div class="field">
-      {{ form.trip_end_date.errors }}
-      {{ form.trip_end_date }}
+
+    <div class="date-row">
+      <div class="field">
+        {{ form.trip_start_date.errors }}
+        {{ form.trip_start_date }}
+      </div>
+      <div class="field">
+        {{ form.trip_end_date.errors }}
+        {{ form.trip_end_date }}
+      </div>
     </div>
+
+    <div class="start-box">
+      <p class="start-label">出発地</p>
+      <div class="field">
+        {{ form.start_spot.errors }}
+        <label class="pin-row"><span>📍</span>{{ form.start_spot }}</label>
+      </div>
+    </div>
+
+    {{ formset.management_form }}
+    {{ formset.non_form_errors }}
+
+    <div id="card-list">
+      {% for card_form in formset %}
+        {% include 'routrip/_card_form.html' %}
+      {% endfor %}
+    </div>
+
+    <button type="button" id="add-card">カードを追加</button>
+
+    <template id="card-template">
+      {% include 'routrip/_card_form.html' with card_form=formset.empty_form %}
+    </template>
+
+    {% if form.errors or formset.total_error_count %}
+      <p class="errorlist">入力内容を確認してください。</p>
+    {% endif %}
+    <p class="errorlist" id="step2-error" hidden>未入力があります。</p>
+
+    <button type="button" class="next-button" id="to-step-3">次へ →</button>
   </div>
 
-  <div class="start-box">
-    <p class="start-label">出発地</p>
-    <div class="field">
-      {{ form.start_spot.errors }}
-      <label class="pin-row"><span>📍</span>{{ form.start_spot }}</label>
-    </div>
-  </div>
+  {# ===== 画面3：タグ・サムネイル・投稿 ===== #}
+  <div class="step" id="step-3">
+    <button type="button" class="back-button" id="back-to-2">← 戻る</button>
 
-  {{ formset.management_form }}
-  {{ formset.non_form_errors }}
-
-  <div id="card-list">
-    {% for card_form in formset %}
-      {% include 'routrip/_card_form.html' %}
-    {% endfor %}
-  </div>
-
-  <button type="button" id="add-card">カードを追加</button>
-
-  <template id="card-template">
-    {% include 'routrip/_card_form.html' with card_form=formset.empty_form %}
-  </template>
-
-  <section id="tag-section">
-    <h3>タグを追加</h3>
-    <input type="text" id="tag-input" placeholder="タグを入力して決定" autocomplete="off" enterkeyhint="done">
-    <p id="tag-error" class="errorlist"></p>
-    <div id="tag-chips"></div>
-    {{ form.tag_text.errors }}
-    {{ form.tag_text }}
-  </section>
+    <section id="tag-section">
+      <h3>タグを追加</h3>
+      <input type="text" id="tag-input" placeholder="タグを入力して決定"
+             autocomplete="off" enterkeyhint="done">
+      <p id="tag-error" class="errorlist"></p>
+      <div id="tag-chips"></div>
+      {{ form.tag_text.errors }}
+      {{ form.tag_text }}
+    </section>
 
     <section id="thumb-section">
-    <h3>サムネイルの画像選択</h3>
-    <div id="thumb-list"></div>
-  </section>
+      <h3>サムネイルの画像選択</h3>
+      <div id="thumb-list"></div>
+    </section>
 
-  {% if form.errors or formset.total_error_count %}
-    <p class="errorlist">入力内容を確認してください。</p>
-  {% endif %}
-
-  <button type="submit">保存</button>
+    <button type="submit" class="submit-button">投稿する</button>
+  </div>
 </form>
-<script src="{% static "routrip/js/log_create.js" %}"></script>
+<script src="{% static 'routrip/js/log_create.js' %}"></script>
 {% endblock %}

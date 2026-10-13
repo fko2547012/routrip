@@ -440,3 +440,100 @@ textarea {
     border-color: var(--color-navy);
     color: var(--color-white);
 }
+
+
+/* ==========================
+   ログ作成：画面の切り替え
+========================== */
+.step {
+    display: none;
+}
+
+.step.is-active {
+    display: block;
+}
+
+.back-button {
+    background: none;
+    border: 1px solid var(--color-gray-text);
+    color: var(--color-gray-text);
+    border-radius: 999px;
+    padding: 4px 14px;
+    font-size: 13px;
+    margin-bottom: var(--spacing);
+}
+
+.next-button {
+    display: block;
+    margin: var(--spacing) auto 0;
+    min-width: 160px;
+    background-color: var(--color-white);
+    border: 1px solid var(--color-gray-text);
+    border-radius: 999px;
+}
+
+.submit-button {
+    display: block;
+    width: 100%;
+    background-color: #4285f4;
+    color: var(--color-white);
+    font-size: 18px;
+    padding: 14px;
+}
+
+.invalid {
+    border-color: var(--color-danger);
+}
+
+
+/* ==========================
+   ログ作成：画面1
+========================== */
+.back-button {
+    display: inline-block;
+    text-decoration: none;
+}
+
+.step1-title {
+    text-align: center;
+    font-size: 26px;
+    margin: 8px 0 4px;
+}
+
+.step1-lead {
+    text-align: center;
+    margin: 0 0 var(--spacing);
+    color: var(--color-gray-text);
+}
+
+.pick-button {
+    display: block;
+    width: 70%;
+    margin: 0 auto var(--spacing);
+    padding: 16px;
+    background-color: #5b5b5b;
+    color: var(--color-white);
+    border-radius: var(--radius);
+    text-align: center;
+    font-size: 20px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.picked-list {
+    min-height: 160px;
+    margin: 0 0 var(--spacing);
+    padding: var(--spacing) var(--spacing) var(--spacing) 32px;
+    background-color: #f0f0f0;
+    border: 1px solid #d5e3f3;
+    border-radius: var(--radius);
+    font-size: 14px;
+}
+
+.picked-list:empty::before {
+    content: "選んだ画像のファイル名が、ここに表示されます";
+    display: block;
+    margin-left: -16px;
+    font-size: 12px;
+    color: var(--color-gray-text);
+}
