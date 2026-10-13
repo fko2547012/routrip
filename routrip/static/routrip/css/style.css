@@ -162,3 +162,149 @@ input[type="checkbox"] {
     box-shadow: 0 2px 8px rgba(36, 30, 78, 0.08);
     margin-bottom: var(--spacing);
 }
+
+
+/* ==========================
+   ログ作成：画面全体
+========================== */
+.field {
+    margin-bottom: 10px;
+}
+
+.date-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+}
+
+.pin-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin: 0;
+    color: inherit;
+}
+
+.start-box {
+    background-color: var(--color-white);
+    border: 1px solid #d5e3f3;
+    border-radius: var(--radius);
+    padding: var(--spacing);
+    margin-bottom: 6px;
+    text-align: center;
+}
+
+.start-label {
+    margin: 0 0 8px 0;
+    font-weight: bold;
+}
+
+
+/* ==========================
+   ログ作成：カード
+========================== */
+.card-form {
+    margin-bottom: var(--spacing);
+}
+
+/* 移動時間・移動手段の行（カードの外） */
+.move {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-bottom: 6px;
+}
+
+.move .field {
+    margin-bottom: 0;
+}
+
+.move::after {
+    content: "▼";
+    grid-column: 1 / -1;
+    text-align: center;
+    color: #c5d3e3;
+    line-height: 1;
+}
+
+/* カードの箱 */
+.card-box {
+    counter-increment: card;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    position: relative;
+    background-color: var(--color-white);
+    border: 1px solid #d5e3f3;
+    border-radius: var(--radius);
+    padding: var(--spacing);
+    box-shadow: 0 2px 8px rgba(36, 30, 78, 0.08);
+}
+
+.card-title {
+    grid-column: 1 / -1;
+    font-size: 13px;
+    font-weight: bold;
+    color: var(--color-gray-text);
+}
+
+.card-title::before {
+    content: "カード " counter(card);
+}
+
+.card-image {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    min-height: 120px;
+    padding: 8px;
+    border: 2px dashed var(--color-purple);
+    border-radius: var(--radius);
+}
+
+.card-image input {
+    border: none;
+    padding: 0;
+    font-size: 12px;
+}
+
+.card-comment {
+    display: flex;
+    flex-direction: column;
+}
+
+.card-comment textarea {
+    flex: 1;
+}
+
+.card-spot {
+    grid-column: 1 / -1;
+    margin-bottom: 0;
+}
+
+#card-list {
+    counter-reset: card;
+}
+
+textarea {
+    min-height: 80px;
+    resize: vertical;
+}
+
+/* カードを追加ボタン（保存ボタンと見分けがつくように） */
+#add-card {
+    display: block;
+    width: 100%;
+    background-color: var(--color-white);
+    border: 2px dashed var(--color-purple);
+    margin-bottom: var(--spacing);
+}
+
+/* 入力エラー（赤い文字） */
+.errorlist {
+    list-style: none;
+    margin: 0 0 6px 0;
+    padding: 0;
+    color: var(--color-danger);
+    font-size: 12px;
+}

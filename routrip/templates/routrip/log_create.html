@@ -2,36 +2,60 @@
 {% load static %}
 
 {% block content %}
-<h2>ログ作成</h2>
 <form method="post" enctype="multipart/form-data" novalidate>
   {% csrf_token %}
-  {{ form.as_p }}
+  {{ form.non_field_errors }}
 
-  <h3>カード</h3>
+  <div class="field">
+    {{ form.title.errors }}
+    {{ form.title }}
+  </div>
+
+  <div class="date-row">
+    <div class="field">
+      {{ form.trip_start_date.errors }}
+      {{ form.trip_start_date }}
+    </div>
+    <div class="field">
+      {{ form.trip_end_date.errors }}
+      {{ form.trip_end_date }}
+    </div>
+  </div>
+
+  <div class="start-box">
+    <p class="start-label">出発地</p>
+    <div class="field">
+      {{ form.start_spot.errors }}
+      <label class="pin-row"><span>📍</span>{{ form.start_spot }}</label>
+    </div>
+  </div>
+
   {{ formset.management_form }}
   {{ formset.non_form_errors }}
 
   <div id="card-list">
     {% for card_form in formset %}
-      <div class="card-form">
-        {{ card_form.as_p }}
-      </div>
+      {% include 'routrip/_card_form.html' %}
     {% endfor %}
   </div>
 
   <button type="button" id="add-card">カードを追加</button>
 
   <template id="card-template">
-    <div class="card-form">
-      {{ formset.empty_form.as_p }}
-    </div>
+    {% include 'routrip/_card_form.html' with card_form=formset.empty_form %}
   </template>
+
+  {# 仮：確認画面（タグ入力）を作るときに、そちらへ移す #}
+  <div class="field">
+    {{ form.tag_text.label_tag }}
+    {{ form.tag_text }}
+  </div>
+
+  {% if form.errors or formset.total_error_count %}
+    <p class="errorlist">入力内容を確認してください。</p>
+  {% endif %}
 
   <button type="submit">保存</button>
 </form>
-
-{% block extra_js %}
-<script src="{% static 'routrip/js/log_create.js' %}"></script> 
-{% endblock %}
-
+<script src="{% static "routrip/js/log_create.js" %}"></script>
 {% endblock %}

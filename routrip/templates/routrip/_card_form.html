@@ -1,0 +1,33 @@
+<div class="card-form">
+  {% for hidden in card_form.hidden_fields %}{{ hidden }}{% endfor %}
+
+  <div class="move">
+    <div class="field">
+      {{ card_form.duration.errors }}
+      {{ card_form.duration }}
+    </div>
+    <div class="field">
+      {{ card_form.transport.errors }}
+      {{ card_form.transport }}
+    </div>
+  </div>
+
+  <div class="card-box">
+    <div class="card-title"></div>
+
+    <div class="card-image field">
+      {{ card_form.image_path.errors }}
+      {{ card_form.image_path }}
+    </div>
+
+    <div class="card-comment field">
+      {{ card_form.comment.errors }}
+      {{ card_form.comment }}
+    </div>
+
+    <div class="card-spot field">
+      {{ card_form.spot.errors }}
+      <label class="pin-row"><span>📍</span>{{ card_form.spot }}</label>
+    </div>
+  </div>
+</div>
