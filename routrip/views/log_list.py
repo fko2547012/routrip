@@ -10,7 +10,7 @@ class LogListView(ListView):
     template_name = 'routrip/top_page.html'
 
     def get_queryset(self):
-        queryset = super().get_queryset().order_by('-created_at')
+        queryset = super().get_queryset().order_by('-posted_at')
 
         departure=self.request.GET.get('departure','').strip()
         destination=self.request.GET.get('destination','').strip()
