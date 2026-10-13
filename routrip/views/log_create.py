@@ -4,7 +4,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.shortcuts import render, redirect
 from django.urls import reverse_lazy
 
-from ..models import Log, Tag
+from ..models import Log, Tag, Section
 from ..forms.log import LogForm, LogCardFormSet
 
 
@@ -44,11 +44,26 @@ class LogCreateView(LoginRequiredMixin, CreateView):
             tag, _ = Tag.objects.get_or_create(name=name)   #タグを取得または作成
             self.object.tags.add(tag)   #ログにタグを追加
 
-        formset.instance = self.object
-        cards = formset.save(commit=False)  #カードを保存するが、まだDBには保存しない
-        for order, card in enumerate(cards, start=1):
+        prev_spot = self.object.start_spot  # 最初の出発側は、出発スポット
+        order = 0
+        for card_form in formset.forms:
+            if not card_form.has_changed(): # 何も入力されていない欄は無視
+                continue
+            order += 1
+            card = card_form.save(commit=False)
+            card.log = self.object
             card.display_order = order
-            card.save() #カードをDBに保存
+            card.save() # カードを保存
+
+            Section.objects.create( # 手前の移動区間を保存
+                log=self.object,
+                from_spot=prev_spot,
+                to_spot=card.spot,
+                section_order=order,
+                transport=card_form.cleaned_data['transport'],
+                duration=card_form.cleaned_data['duration'],
+            )
+            prev_spot = card.spot   # 次のカードの出発側にする
         return response
 
     # def success_url(self):

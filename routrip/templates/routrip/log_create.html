@@ -1,4 +1,5 @@
 {% extends 'routrip/base.html' %}
+{% load static %}
 
 {% block content %}
 <h2>ログ作成</h2>
@@ -8,12 +9,29 @@
 
   <h3>カード</h3>
   {{ formset.management_form }}
-  {% for card_form in formset %}
+  {{ formset.non_form_errors }}
+
+  <div id="card-list">
+    {% for card_form in formset %}
+      <div class="card-form">
+        {{ card_form.as_p }}
+      </div>
+    {% endfor %}
+  </div>
+
+  <button type="button" id="add-card">カードを追加</button>
+
+  <template id="card-template">
     <div class="card-form">
-      {{ card_form.as_p }}
+      {{ formset.empty_form.as_p }}
     </div>
-  {% endfor %}
+  </template>
 
   <button type="submit">保存</button>
 </form>
+
+{% block extra_js %}
+<script src="{% static 'routrip/js/log_create.js' %}"></script> 
+{% endblock %}
+
 {% endblock %}

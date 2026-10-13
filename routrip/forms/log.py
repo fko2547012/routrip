@@ -52,9 +52,43 @@ class LogForm(ModelForm):
         return names  
 
 
-LogCardFormSet = inlineformset_factory( #カードを複数枚作成するフォームセット
+TRANSPORT_CHOICES = [
+    ('徒歩', '徒歩'), ('電車', '電車'), ('バス', 'バス'), ('車', '車'),
+    ('自転車', '自転車'), ('飛行機', '飛行機'), ('船', '船'),
+]
+
+DURATION_CHOICES = [(m, f'{m}分') for m in (10, 20, 30, 45, 60, 90, 120, 180)]   # 仮
+
+
+class LogCardForm(ModelForm):
+    '''
+    カード1枚分のフォーム（手前の移動手段・移動時間を含む）
+    '''
+    transport = forms.ChoiceField(
+        label='移動手段',
+        choices=[('', '選択してください')] + TRANSPORT_CHOICES,
+        error_messages={'required': '移動手段を選択してください'})
+    duration = forms.TypedChoiceField(
+        label='移動時間', required=False,
+        choices=[('', '----')] + DURATION_CHOICES,
+        coerce=int, empty_value=None)
+
+    field_order = ['transport', 'duration', 'spot', 'image_path', 'comment']
+
+    class Meta:
+        model = Logcard
+        fields = ['spot', 'image_path', 'comment']
+        error_messages = {
+            'spot': {'required': 'スポットを入力してください'},
+            'comment': {'required': 'コメントを入力してください'},
+        }
+
+
+LogCardFormSet = inlineformset_factory(
     Log, Logcard,
-    fields=['spot', 'image_path', 'comment'],
-    extra=3,    #カードを3枚表示
+    form=LogCardForm,
+    extra=0,
+    min_num=1,
+    validate_min=True,
     can_delete=False,
 )
