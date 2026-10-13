@@ -45,11 +45,14 @@
     {% include 'routrip/_card_form.html' with card_form=formset.empty_form %}
   </template>
 
-  {# 仮：確認画面（タグ入力）を作るときに、そちらへ移す #}
-  <div class="field">
-    {{ form.tag_text.label_tag }}
+  <section id="tag-section">
+    <h3>タグを追加</h3>
+    <input type="text" id="tag-input" placeholder="タグを入力して決定" autocomplete="off" enterkeyhint="done">
+    <p id="tag-error" class="errorlist"></p>
+    <div id="tag-chips"></div>
+    {{ form.tag_text.errors }}
     {{ form.tag_text }}
-  </div>
+  </section>
 
   {% if form.errors or formset.total_error_count %}
     <p class="errorlist">入力内容を確認してください。</p>

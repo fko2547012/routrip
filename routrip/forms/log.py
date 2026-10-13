@@ -9,10 +9,10 @@ class LogForm(ModelForm):
     '''
     ログ投稿フォーム
     '''
-    tag_text=forms.CharField(
+    tag_text = forms.CharField(
         label='タグ',
         required=False,
-        help_text='スペースまたはカンマで区切ってタグを入力してください')
+        widget=forms.HiddenInput)
 
     class Meta:
         model = Log
