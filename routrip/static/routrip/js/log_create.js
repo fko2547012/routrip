@@ -228,22 +228,47 @@ const REQUIRED = [
   '[name$="-comment"]',
 ].join(',');
 
+function showStep2Error(message) {
+  /*
+  画面2のエラーメッセージを表示
+  */
+  step2Error.textContent = message;
+  step2Error.hidden = false;
+}
+
 // 画面2 → 画面3
 document.getElementById('to-step-3').addEventListener('click', () => {
-  const empty = [...step2.querySelectorAll(REQUIRED)]
-    .filter((el) => el.value.trim() === '');
-
   step2.querySelectorAll('.invalid').forEach((el) => el.classList.remove('invalid'));
 
+  // 未入力の確認
+  const empty = [...step2.querySelectorAll(REQUIRED)]
+    .filter((el) => el.value.trim() === '');
   if (empty.length > 0) {
     empty.forEach((el) => el.classList.add('invalid'));
-    step2Error.hidden = false;
+    showStep2Error('未入力があります。');
     empty[0].scrollIntoView({ block: 'center' });
     return;
   }
+
+  // 終了日が、開始日より前でないかの確認
+  const start = step2.querySelector('[name="trip_start_date"]');
+  const end = step2.querySelector('[name="trip_end_date"]');
+  if (end.value < start.value) {            // 「2026-09-20」の形は、文字のまま比べられる
+    end.classList.add('invalid');
+    showStep2Error('終了日は開始日以降にしてください');
+    end.scrollIntoView({ block: 'center' });
+    return;
+  }
+
   step2Error.hidden = true;
   showStep(3);
 });
+
+// 開始日を決めたら、終了日のカレンダーで、それより前を選べなくする
+const startDate = step2.querySelector('[name="trip_start_date"]');
+const endDate = step2.querySelector('[name="trip_end_date"]');
+startDate.addEventListener('change', () => { endDate.min = startDate.value; });
+endDate.min = startDate.value;
 
 // 入力し直したら、赤枠を消す
 step2.addEventListener('input', (e) => e.target.classList.remove('invalid'));
@@ -274,9 +299,24 @@ function fileKey(files) {
   return files.map((f) => `${f.name}:${f.size}:${f.lastModified}`).join('|');
 }
 
+const ALLOWED_IMAGE = /\.(jpe?g|png|gif|webp)$/i;
+const pickerError = document.getElementById('picker-error');
+
 // 選んだ写真のファイル名を、一覧に出す
 picker.addEventListener('change', () => {
-  pickedFiles = [...picker.files];
+  const all = [...picker.files];
+  pickedFiles = all.filter((f) => ALLOWED_IMAGE.test(f.name));
+  const rejected = all.filter((f) => !ALLOWED_IMAGE.test(f.name));
+
+  if (rejected.length > 0) {
+    pickerError.textContent =
+      `対応していない形式のファイルを除きました（${rejected.map((f) => f.name).join('、')}）。` +
+      'JPEG・PNG・GIF・WebPが使えます。';
+    pickerError.hidden = false;
+  } else {
+    pickerError.hidden = true;
+  }
+
   pickedList.innerHTML = '';
   pickedFiles.forEach((f) => {
     const li = document.createElement('li');
