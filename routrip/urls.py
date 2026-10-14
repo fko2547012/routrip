@@ -3,6 +3,7 @@ from .views.account import SignUpView,CustomLoginView,CustomLogoutView
 from .views.log_list import LogListView
 from .views.mypage import MypageView
 from .views.log_create import LogCreateView
+from .views.spot import search_spots, nearby_spots, suggest_spots
 
 app_name = 'routrip'
 urlpatterns = [
@@ -12,5 +13,8 @@ urlpatterns = [
     path('logout/', CustomLogoutView.as_view(), name='logout'),
     path('log/list/', LogListView.as_view(), name='top_page'),
     path('mypage/', MypageView.as_view(), name='mypage'),
-    path('log/create/', LogCreateView.as_view(), name='log_create')
+    path('log/create/', LogCreateView.as_view(), name='log_create'),
+    path('spots/search/', search_spots, name='search_spots'),
+    path('spots/nearby/', nearby_spots, name='nearby_spots'),
+    path('spots/suggest/', suggest_spots, name='suggest_spots')
 ]
