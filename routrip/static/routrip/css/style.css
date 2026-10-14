@@ -537,3 +537,19 @@ textarea {
     font-size: 12px;
     color: var(--color-gray-text);
 }
+
+
+/* ==========================
+  ログ作成：画面3
+========================== */
+.submit-button:disabled {
+    opacity: 0.6;
+    cursor: wait;
+}
+
+.submit-status {
+    margin: 8px 0 0;
+    text-align: center;
+    font-size: 13px;
+    color: var(--color-gray-text);
+}

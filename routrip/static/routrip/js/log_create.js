@@ -382,3 +382,33 @@ document.getElementById('to-step-2').addEventListener('click', () => {
 
 // 画面2 → 画面1
 document.getElementById('back-to-1').addEventListener('click', () => showStep(1));
+
+
+// ==========================
+// 二重投稿の防止
+// ==========================
+const logForm = document.getElementById('log-form');
+const submitButton = logForm.querySelector('.submit-button');
+const submitStatus = document.getElementById('submit-status');
+let isSubmitting = false;
+
+logForm.addEventListener('submit', (e) => {
+  if (isSubmitting) {
+    e.preventDefault();               // 2回目以降の送信は、止める
+    return;
+  }
+  isSubmitting = true;
+  submitButton.disabled = true;
+  submitButton.textContent = '投稿中…';
+  submitStatus.hidden = false;
+});
+
+// ブラウザの「戻る」で、このページに戻ってきたとき、ボタンを元の状態に戻す
+window.addEventListener('pageshow', (e) => {
+  if (e.persisted) {
+    isSubmitting = false;
+    submitButton.disabled = false;
+    submitButton.textContent = '投稿する';
+    submitStatus.hidden = true;
+  }
+});
