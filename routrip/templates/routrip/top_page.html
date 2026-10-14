@@ -144,10 +144,54 @@
 
     .log-card-link {
         display: block;
-        padding: 20px;
+        padding: 16px;   /*--もとは２０--*/
         text-decoration: none;
         color: inherit;
     }
+
+    /* カード内部を左右に配置するフレックス設定 */
+    .log-card-inner {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+    }
+
+    .log-thumbnail-wrapper {
+        width: 80px;
+        height: 80px;
+        flex-shrink: 0;
+        border-radius: 8px;
+        overflow: hidden;
+        background-color: #f1f5f9;
+        border: 1px solid #e2e8f0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    /* 実際のサムネイル画像がある場合 */
+    .log-thumbnail {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    /* 画像がない場合の「No Image」枠デザイン */
+    .no-image-box {
+        width: 100%;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #94a3b8;
+        font-size: 0.75rem;
+        font-weight: 500;
+        text-align: center;
+    }
+
+    .log-info {
+        flex-grow: 1;
+    }    
 
     .log-title {
         font-size: 1.1rem;
