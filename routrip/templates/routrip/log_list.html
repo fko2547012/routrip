@@ -2,7 +2,7 @@
 <div class="log-list-container">
     {% for log in logs%}
         <div class="log-card">
-            <a href="#" class="log-card-link">
+            <a href="{% url 'routrip:log_detail' log.pk %}" class="log-card-link">
                 <span class="log-title">{{ log.title  }}</span>
             </a> 
         </div>
