@@ -2,11 +2,11 @@
 <div class="log-list-container">
     {% for log in logs%}
         <div class="log-card">
-            <a href="#" class="log-card-link">
+            <a href="{% url 'routrip:log_detail' log.pk %}" class="log-card-link">
                 <div class="log-card-inner">
-                    {% if log.thumbnail_card and log.thumbnail_card.image %}
+                    {% if log.thumbnail_card and log.thumbnail_card.image_path %}
                         <div class="log-thumbnail-wrapper">
-                            <img src="{{ log.thumbnail_card.image.url }}" alt="{{ log.title }}" class="log-thumbnail">
+                            <img src="{{ log.thumbnail_card.image_path.url }}" alt="{{ log.title }}" class="log-thumbnail">
                         </div>
                     {% else %}
                         <!-- 画像がない場合のプレースホルダー（またはデフォルト画像） -->
