@@ -13,6 +13,7 @@
 
     <input type="file" id="image-picker" accept="image/*" multiple hidden>
     <label for="image-picker" class="pick-button">画像を選択</label>
+    <p id="picker-error" class="errorlist" hidden></p>
 
     <ul id="picked-list" class="picked-list"></ul>
 
@@ -91,6 +92,9 @@
     </section>
 
     <button type="submit" class="submit-button">投稿する</button>
+    <p id="submit-status" class="submit-status" hidden>
+      写真を送信しています。完了するまで、このままお待ちください。
+    </p>
   </div>
 </form>
 <script src="{% static 'routrip/js/log_create.js' %}"></script>

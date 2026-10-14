@@ -3,8 +3,20 @@
     {% for log in logs%}
         <div class="log-card">
             <a href="#" class="log-card-link">
-                <span class="log-title">{{ log.title  }}</span>
-            </a> 
+                <div class="log-card-inner">
+                    {% if log.thumbnail_card and log.thumbnail_card.image %}
+                        <div class="log-thumbnail-wrapper">
+                            <img src="{{ log.thumbnail_card.image.url }}" alt="{{ log.title }}" class="log-thumbnail">
+                        </div>
+                    {% else %}
+                        <!-- 画像がない場合のプレースホルダー（またはデフォルト画像） -->
+                        <div class="log-thumbnail-wrapper no-image">
+                            <span>No Image</span>
+                        </div>
+                    {% endif %}
+                    <span class="log-title">{{ log.title  }}</span>
+                </div>
+                </a> 
         </div>
         
     {% empty %}
