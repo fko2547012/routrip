@@ -212,9 +212,16 @@ const steps = document.querySelectorAll('.step');
 const step2 = document.getElementById('step-2');
 const step2Error = document.getElementById('step2-error');
 
-function showStep(n) {
+// 今表示している画面の番号
+let currentStep = Number(document.querySelector('.step.is-active').id.replace('step-', ''));
+
+function showStep(n, push = true) {
   steps.forEach((s) => s.classList.toggle('is-active', s.id === `step-${n}`));
   window.scrollTo(0, 0);
+  if (push && n !== currentStep) {
+    history.pushState({ step: n }, '');      // 履歴に、画面の移動を1つ積む
+  }
+  currentStep = n;
 }
 
 // 画面2で、必須の項目
@@ -410,5 +417,54 @@ window.addEventListener('pageshow', (e) => {
     submitButton.disabled = false;
     submitButton.textContent = '投稿する';
     submitStatus.hidden = true;
+    skipLeaveWarning = false;
   }
+});
+
+
+// ==========================
+// 戻る操作と、入力が消える前の確認
+// ==========================
+let skipLeaveWarning = false;
+
+// 何か入力されているか
+function hasInput() {
+  if (pickedFiles.length > 0 || tags.length > 0) return true;
+  return [...logForm.querySelectorAll(
+    'input[type="text"], input[type="date"], textarea, input[type="file"]'
+  )].some((el) => (el.type === 'file' ? el.files.length > 0 : el.value.trim() !== ''));
+}
+
+// 履歴の準備：「入口」と「今の画面」の2つを積んでおく
+history.replaceState({ guard: true }, '');
+history.pushState({ step: currentStep }, '');
+
+window.addEventListener('popstate', (e) => {
+  if (e.state && e.state.step) {
+    showStep(e.state.step, false);           // 画面を切り替えるだけ
+    return;
+  }
+  // 最初の画面より前に、戻ろうとしたとき
+  if (hasInput() && !confirm('入力した内容が消えてしまいます。このページを離れますか？')) {
+    history.pushState({ step: currentStep }, '');   // 留まる
+    return;
+  }
+  skipLeaveWarning = true;
+  history.back();                                    // ページを離れる
+});
+
+// 更新・タブを閉じるときの警告（投稿中は出さない）
+window.addEventListener('beforeunload', (e) => {
+  if (skipLeaveWarning || isSubmitting || !hasInput()) return;
+  e.preventDefault();
+  e.returnValue = '';
+});
+
+// 画面1の「← 戻る」リンク
+document.querySelector('#step-1 a.back-button').addEventListener('click', (e) => {
+  if (hasInput() && !confirm('入力した内容が消えてしまいます。ホームに戻りますか？')) {
+    e.preventDefault();
+    return;
+  }
+  skipLeaveWarning = true;
 });
