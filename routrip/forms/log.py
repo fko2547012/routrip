@@ -58,8 +58,6 @@ TRANSPORT_CHOICES = [
     ('自転車', '自転車'), ('飛行機', '飛行機'), ('船', '船'),
 ]
 
-DURATION_CHOICES = [(m, f'{m}分') for m in (10, 20, 30, 45, 60, 90, 120, 180)]   # 仮
-
 
 class LogCardForm(ModelForm):
     '''
@@ -69,10 +67,20 @@ class LogCardForm(ModelForm):
         label='移動手段',
         choices=[('', '選択してください')] + TRANSPORT_CHOICES,
         error_messages={'required': '移動手段を選択してください'})
-    duration = forms.TypedChoiceField(
-        label='移動時間', required=False,
-        choices=[('', '----')] + DURATION_CHOICES,
-        coerce=int, empty_value=None)
+    duration = forms.IntegerField(
+        label='移動時間（分）',
+        required=False,
+        min_value=1,
+        max_value=14400,      
+        widget=forms.NumberInput(attrs={
+            'placeholder': '移動時間（分）',
+            'inputmode': 'numeric',    # スマホで数字のキーボードを出す
+        }),
+        error_messages={
+            'invalid': '移動時間は数字で入力してください',
+            'min_value': '移動時間は1分以上で入力してください',
+            'max_value': '移動時間が長すぎます',
+        })
 
     field_order = ['transport', 'duration', 'spot', 'image_path', 'comment']
 
