@@ -1,8 +1,12 @@
 {% extends 'routrip/base.html' %}
 {% load static %}
 
+{% block extra_css %}
+  <link rel="stylesheet" href="{% static 'routrip/css/log_create.css' %}">
+{% endblock %}
+
 {% block content %}
-<form method="post" enctype="multipart/form-data" novalidate id="log-form">
+<form class="log-create" method="post" enctype="multipart/form-data" novalidate id="log-form">
   {% csrf_token %}
 
   {# ===== 画面1：画像選択 ===== #}
