@@ -9,9 +9,14 @@
         <a href="{% url 'log_list' %}">← 戻る</a>
     </div>
 
-    <h1>ログタイトル</h1>
+    <h1>{{ log.title }}</h1>
 
-    <p class="trip-period">旅行期間</p>
+    <p class="trip-period">旅行期間
+    {{ log.trip_start_date|date:"Y/m/d" }}
+    {% if log.trip_start_date != log.trip_end_date %}
+        〜 {{ log.trip_end_date|date:"Y/m/d" }}
+    {% endif %}
+    </p>
 
     <hr>
 
@@ -45,14 +50,14 @@
                 {% if item.card.image_path %}
                 <div class="card-photo">
                     <img
-                        src="{{ item.card.image_path }}"
+                        src="{{ item.card.image_path.url }}"
                         alt="{{ item.card.spot.name }}の写真"
                     >
                 </div>
                 {% endif %}
                 <!--投稿者のコメント-->
             <div class="card-comment">
-                <p>{{ item.card.comment }}</p>
+                <p>{{ item.card.comment | linebreaksbr }}</p>
             </div>
 
             <!--スポット名-->
@@ -62,10 +67,11 @@
         </div>
     {% endif %}
 
+    {% endfor %}
     <!-- 投稿者本人だけに表示-->
         {% if is_owner %}
             <div class="log-actions">
-                <a href="#" class="edit-button">編集</a>
+                <a href="{% url 'log_edit' log.pk %}" class="edit-button">編集</a>
                 <a href="#" class="delete-button">削除</a>
             </div>
         {% endif %}

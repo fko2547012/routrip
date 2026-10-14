@@ -29,7 +29,7 @@ class LogDetailView(LoginRequiredMixin, DetailView):
             return super().get(request, *args, **kwargs)
         except Http404:
             messages.error(request, 'このログが見つかりませんでした。')
-            return redirect('log_list')
+            return redirect('routrip:log_list')
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
