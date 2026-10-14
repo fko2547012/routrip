@@ -75,8 +75,7 @@ class LogUpdateView(LoginRequiredMixin, UpdateView):
         sections[key].append(section)
         
         prev_spot_id=self.object.start_spot_id
-        
-        for card
+
         
             
     
