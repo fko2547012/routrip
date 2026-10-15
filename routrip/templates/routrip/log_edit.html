@@ -1,10 +1,108 @@
-{% extends "routrip/base.html" %}
+{% extends 'routrip/base.html' %}
+{% load static %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'routrip/css/log_create.css' %}">
+{% endblock %}
 
 {% block content %}
-    <h1>ログ編集</h1>
-    <form method="post">
-        {% csrf_token %}
-        {{ form.as_p }}
-        <button type="submit">保存</button>
-    </form>
+    <form class="log-create" method="post" enctype="multipart/form-data" novalidate id="log-edit-form">
+{% csrf_token %}
+
+{# ===== 画面2：登録済みの内容を編集 ===== #}
+<div class="step is-active" id="edit-step-2">
+
+    <a class="back-button" href="{% url 'routrip:log_detail' log.pk %}">← 戻る</a>
+
+    <h2 class="step1-title">ログ編集</h2>
+
+    {{ form.non_field_errors }}
+
+    <div class="field">
+    {{ form.title.errors }}
+    {{ form.title }}
+    </div>
+
+    <div class="date-row">
+    <div class="field">
+        {{ form.trip_start_date.errors }}
+        {{ form.trip_start_date }}
+    </div>
+    
+    <div class="field">
+        {{ form.trip_end_date.errors }}
+        {{ form.trip_end_date }}
+    </div>
+    </div>
+
+    <div class="start-box">
+    <p class="start-label">出発地</p>
+
+    <div class="field">
+        {{ form.start_spot.errors }}
+
+        <label class="pin-row">
+        <span>📍</span>
+        {{ form.start_spot }}
+        </label>
+    </div>
+</div>
+
+    {{ formset.management_form }}
+    {{ formset.non_form_errors }}
+
+    <div id="card-list">
+    {% for card_form in formset %}
+        {% include 'routrip/_card_form.html' %}
+    {% endfor %}
+    </div>
+
+    <button type="button" id="add-card">カードを追加</button>
+
+    <template id="card-template">
+        {% include 'routrip/_card_form.html' with card_form=formset.empty_form %}
+    </template>
+
+    {% if form.errors or formset.total_error_count %}
+    <p class="errorlist">入力内容を確認してください。</p>
+    {% endif %}
+
+    <p class="errorlist" id="edit-error" hidden></p>
+
+    <button type="button" class="next-button" id="to-step-3">次へ →</button>
+        </div>
+        
+        {# ===== 画面3：タグ・サムネイル・更新 ===== #}
+        <div class="step" id="edit-step-3" hidden>
+
+    <button type="button" class="back-button" id="back-to-step-2">← 戻る</button>
+
+    <section id="tag-section">
+        <h3>タグを追加</h3>
+        <input type="text" id="tag-input" placeholder="タグを入力して決定"
+        autocomplete="off"
+        enterkeyhint="done">
+        
+        <button type="button" id="add-tag">追加</button>
+        
+        <p id="tag-error" class="errorlist"></p>
+        <div id="tag-chips"></div>
+        {{ form.tag_text.errors }}
+        {{ form.tag_text }}
+    </section>
+
+    <section id="thumb-section">
+        <h3>サムネイルの画像選択</h3>
+        <div id="thumb-list"></div>
+    </section>
+
+    <button type="submit" class="submit-button">更新する</button>
+</div>
+</form>
+
+{# 登録済みの写真とサムネイルを編集用JavaScriptに渡す #}
+{{ card_images|json_script:"card-images" }}
+{{ selected_thumbnail|json_script:"selected-thumbnail" }}
+
+<script src="{% static 'routrip/js/log_edit.js' %}"></script>
 {% endblock %}

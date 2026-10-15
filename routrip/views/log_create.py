@@ -6,6 +6,7 @@ from django.urls import reverse_lazy
 
 from ..models import Log, Tag, Section
 from ..forms.log import LogForm, LogCardFormSet
+from ..utils.photo import get_photo_info
 
 
 class LogCreateView(LoginRequiredMixin, CreateView):
@@ -54,6 +55,14 @@ class LogCreateView(LoginRequiredMixin, CreateView):
             card = card_form.save(commit=False)
             card.log = self.object
             card.display_order = order
+
+            photo = card_form.cleaned_data.get('image_path')
+            if photo:
+                info = get_photo_info(photo)
+                card.taken_at = info['taken_at']
+                card.latitude = info['lat']
+                card.longitude = info['lng'] 
+
             card.save() # カードを保存
             saved_cards[index] = card  # 保存したカードを記録
 
