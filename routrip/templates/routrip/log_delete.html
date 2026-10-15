@@ -3,7 +3,7 @@
 {% block content %}
     {{ log.title }}
     <hr>
-    <p>本当に削除しますか？</P>
+    <p>本当に削除しますか？</p>
     <form method="post">
     {% csrf_token %}
         <a href="{% url 'log_detail' log.pk %}">キャンセル</a>
