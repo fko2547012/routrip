@@ -1,12 +1,12 @@
 {% extends 'routrip/base.html' %}
 
 {% block content %}
-    {# {{ object.title }} #}
+    {{ log.title }}
     <hr>
     <p>本当に削除しますか？</P>
     <form method="post">
     {% csrf_token %}
-        <a href="#">キャンセル</a>
+        <a href="{% url 'log_detail' log.pk %}">キャンセル</a>
         <button type="submit">削除</button>
     </form>
 {% endblock %}
