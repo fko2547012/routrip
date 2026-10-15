@@ -6,7 +6,7 @@
     <p>本当に削除しますか？</p>
     <form method="post">
     {% csrf_token %}
-        <a href="{% url 'log_detail' log.pk %}">キャンセル</a>
+        <a href="{% url 'routrip:log_detail' log.pk %}">キャンセル</a>
         <button type="submit">削除</button>
     </form>
 {% endblock %}
