@@ -72,7 +72,7 @@
         {% if is_owner %}
             <div class="log-actions">
                 <a href="{% url 'routrip:log_edit' log.pk %}" class="edit-button">編集</a>
-                <a href="#" class="delete-button">削除</a>
+                <a href="{% url 'routrip:log_delete' log.pk %}" class="delete-button">削除</a>
             </div>
         {% endif %}
 
