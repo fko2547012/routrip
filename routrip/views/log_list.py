@@ -18,14 +18,14 @@ class LogListView(ListView):
         #出発地キーワードでの絞り込み
         if departure:
             queryset = queryset.filter(
-                Q(title__icontains=departure) | Q(departure__icontains=departure)
+                Q(title__icontains=departure) | Q(start_spot__name__icontains=departure)
             )
 
         #目的地キーワードでの絞り込み
         if destination:
             queryset = queryset.filter(
-                Q(title__icontains=destination) | Q(destination__icontains=destination)
-            )
+                Q(title__icontains=destination) | Q(cards__spot__name__icontains=destination)
+            ).distinct()#重複を排除するため
 
         return queryset
 
@@ -40,4 +40,3 @@ class LogListView(ListView):
         context['is_searched'] = bool(departure or destination)  
         return context
 
-    
