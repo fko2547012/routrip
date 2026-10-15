@@ -309,10 +309,60 @@ function fileKey(files) {
 const ALLOWED_IMAGE = /\.(jpe?g|png|gif|webp)$/i;
 const pickerError = document.getElementById('picker-error');
 
+const photoInfo = new Map();      // 写真ファイル → {lat, lng, takenAt}
+let pickPromise = Promise.resolve();
+let pickToken = 0;
+
+// 1枚の写真から、位置情報と撮影日時を読む（読めなくてもエラーにしない）
+async function readPhotoInfo(file) {
+  let lat = null;
+  let lng = null;
+  let takenAt = null;
+
+  //位置情報
+  try {
+    const gps = await exifr.gps(file);  // 位置情報が無いと undefined
+    if (gps) {
+      lat = gps.latitude;
+      lng = gps.longitude;
+    }
+  } catch (err) {
+    console.error('位置情報の読み取りに失敗しました:', file.name, err);
+  }
+  // 撮影日時
+  try{
+    const meta = await exifr.parse(file, { pick: ['DateTimeOriginal'] });
+    if (meta && meta.DateTimeOriginal) {
+      takenAt = meta.DateTimeOriginal;
+    }
+  } catch (err) {
+    console.error('撮影日時の読み取りに失敗しました:', file.name, err);
+  }
+
+  return { lat, lng, takenAt };
+}
+
+// 撮影日時の順に並べる。日時の無いものは、最後（選んだ順のまま）
+function compareByTakenAt(photoA, photoB) {
+  const takenAtA = photoInfo.get(photoA).takenAt;   // 撮影日時（無ければ null）
+  const takenAtB = photoInfo.get(photoB).takenAt;
+
+  // 両方に撮影日時がある：古いほうを先にする
+  if (takenAtA && takenAtB) {
+    return takenAtA - takenAtB;
+  }
+  // 片方にしか無い：撮影日時のあるほうを先にする（無いほうは最後に回す）
+  if (takenAtA) return -1;
+  if (takenAtB) return 1;
+  // 両方とも無い：選んだ順のまま
+  return 0;
+}
+
 // 選んだ写真のファイル名を、一覧に出す
 picker.addEventListener('change', () => {
+  const token = ++pickToken;
   const all = [...picker.files];
-  pickedFiles = all.filter((f) => ALLOWED_IMAGE.test(f.name));
+  const files = all.filter((f) => ALLOWED_IMAGE.test(f.name));
   const rejected = all.filter((f) => !ALLOWED_IMAGE.test(f.name));
 
   if (rejected.length > 0) {
@@ -325,15 +375,30 @@ picker.addEventListener('change', () => {
   }
 
   pickedList.innerHTML = '';
-  pickedFiles.forEach((f) => {
-    const li = document.createElement('li');
-    li.textContent = f.name;
-    pickedList.append(li);
-  });
+  pickPromise = (async () => {
+    await Promise.all(files.map(async (f) => {
+      photoInfo.set(f, await readPhotoInfo(f));
+    }));
+    if (token !== pickToken) return;  // 読んでいる間に、選び直されたら、捨てる
+
+
+    files.sort(compareByTakenAt);
+    pickedFiles = files;
+
+    pickedList.innerHTML = '';
+    files.forEach((f) => {
+      const info = photoInfo.get(f);
+      const li = document.createElement('li');
+      li.textContent = `${f.name} ${info.lat !== null ? '📍位置情報あり' : '位置情報なし'}`;
+      pickedList.append(li);
+    });
+  })();
 });
 
 // カード1枚分の入力を、空に戻す
 function resetCard(card) {
+  delete card.dataset.lat;
+  delete card.dataset.lng;
   card.querySelectorAll('input[type="file"], textarea, select').forEach((el) => {
     el.value = '';
   });
@@ -374,11 +439,19 @@ function buildCards(files) {
 
   const cards = cardList.querySelectorAll(':scope > .card-form');
   files.forEach((file, i) => setFile(cards[i], file));
+  files.forEach((file, i) => {
+    const info = photoInfo.get(file);
+    if (info && info.lat !== null) {
+      cards[i].dataset.lat = info.lat;     // カードに、緯度・経度を持たせる
+      cards[i].dataset.lng = info.lng;
+    }
+  });
   renderThumbs();
 }
 
 // 画面1 → 画面2
-document.getElementById('to-step-2').addEventListener('click', () => {
+document.getElementById('to-step-2').addEventListener('click', async () => {
+  await pickPromise;
   const key = fileKey(pickedFiles);
   if (key !== appliedKey) {          // 選び方が変わったときだけ、カードを作り直す
     buildCards(pickedFiles);
