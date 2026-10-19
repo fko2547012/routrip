@@ -1,0 +1,211 @@
+/* ログ詳細全体 */
+.log-detail {
+    width: min(100%, 720px);
+    margin: 0 auto;
+    padding: 24px 20px 48px;
+    box-sizing: border-box;
+    color: #333;
+    overflow-wrap: anywhere;
+}
+
+/* 一覧へ戻る */
+.log-detail .back-button {
+    margin-bottom: 24px;
+}
+
+.log-detail .back-button a {
+    color: #555;
+    text-decoration: none;
+}
+
+.log-detail .back-button a:hover {
+    text-decoration: underline;
+}
+
+/* タイトル */
+.log-detail h1 {
+    margin: 0 0 12px;
+    font-size: clamp(24px, 5vw, 32px);
+    line-height: 1.5;
+}
+
+/* 旅行期間 */
+.log-detail .trip-period {
+    margin: 0 0 24px;
+    color: #666;
+    font-size: 14px;
+    line-height: 1.8;
+}
+
+.log-detail hr {
+    margin: 0 0 24px;
+    border: 0;
+    border-top: 1px solid #ddd;
+}
+
+/* 出発地 */
+.log-detail .departure {
+    padding: 18px 20px;
+    background: #f4f7f6;
+    border: 1px solid #dce6e1;
+    border-radius: 12px;
+}
+
+.log-detail .departure h2 {
+    margin: 0 0 8px;
+    font-size: 15px;
+    color: #555;
+}
+
+.log-detail .departure p {
+    margin: 0;
+    font-weight: bold;
+    line-height: 1.7;
+}
+
+/* 移動区間 */
+.log-detail .travel {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 8px 20px;
+    margin: 0 0 0 24px;
+    padding: 24px 16px;
+    border-left: 2px dashed #c7d8ce;
+    font-size: 14px;
+    color: #666;
+}
+
+.log-detail .travel p {
+    flex-basis: 100%;
+    margin: 0;
+    text-align: center;
+    line-height: 1.7;
+}
+
+.log-detail .travel span {
+    line-height: 1.7;
+}
+
+/* ログカード */
+.log-detail .log-card {
+    margin: 0 0 8px;
+    padding: 0;
+    overflow: hidden;
+    background: #fff;
+    border: 1px solid #ddd;
+    border-radius: 12px;
+    box-shadow: 0 3px 12px rgb(0 0 0 / 5%);
+}
+
+/* 写真 */
+.log-detail .card-photo {
+    background: #f2f2f2;
+}
+
+.log-detail .card-photo img {
+    display: block;
+    width: 100%;
+    height: auto;
+}
+
+/* コメント */
+.log-detail .card-comment {
+    padding: 20px;
+}
+
+.log-detail .card-comment p {
+    margin: 0;
+    font-size: 15px;
+    line-height: 1.9;
+}
+
+/* スポット名 */
+.log-detail .card-spot {
+    padding: 14px 20px;
+    background: #f8faf9;
+    border-top: 1px solid #eee;
+    font-size: 14px;
+    font-weight: bold;
+    line-height: 1.7;
+}
+
+/* 編集・削除ボタン */
+.log-detail .log-actions {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 16px;
+    margin-top: 36px;
+}
+
+.log-detail .edit-button,
+.log-detail .delete-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 120px;
+    min-height: 44px;
+    padding: 10px 24px;
+    box-sizing: border-box;
+    border: 1px solid transparent;
+    border-radius: 8px;
+    font-size: 15px;
+    font-weight: bold;
+    text-decoration: none;
+}
+
+.log-detail .edit-button {
+    background: #4285f4;
+    color: #fff;
+}
+
+.log-detail .edit-button:hover {
+    background: #265d41;
+}
+
+.log-detail .delete-button {
+    background: #fff;
+    border-color: #bf4141;
+    color: #bf4141;
+}
+
+.log-detail .delete-button:hover {
+    background: #fff1f1;
+}
+
+.log-detail a:focus-visible {
+    outline: 3px solid #3676c8;
+    outline-offset: 4px;
+}
+
+/* スマートフォン */
+@media (max-width: 480px) {
+    .log-detail {
+        padding: 20px 12px 36px;
+    }
+
+    .log-detail .departure,
+    .log-detail .card-comment {
+        padding: 16px;
+    }
+
+    .log-detail .card-spot {
+        padding: 12px 16px;
+    }
+
+    .log-detail .travel {
+        margin-left: 16px;
+        padding: 20px 12px;
+    }
+
+    .log-detail .log-actions {
+        gap: 12px;
+    }
+
+    .log-detail .edit-button,
+    .log-detail .delete-button {
+        flex: 1;
+    }
+}
