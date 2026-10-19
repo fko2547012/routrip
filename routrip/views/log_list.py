@@ -40,3 +40,4 @@ class LogListView(ListView):
         context['is_searched'] = bool(departure or destination)  
         return context
 
+    
