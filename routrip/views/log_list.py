@@ -14,6 +14,7 @@ class LogListView(ListView):
 
         departure=self.request.GET.get('departure','').strip()
         destination=self.request.GET.get('destination','').strip()
+        tag_query=self.request.GET.get('tag','').strip()
 
         #出発地キーワードでの絞り込み
         if departure:
@@ -27,17 +28,28 @@ class LogListView(ListView):
                 Q(title__icontains=destination) | Q(cards__spot__name__icontains=destination)
             ).distinct()#重複を排除するため
 
+        #タグ名での絞り込み
+        if tag_query:
+            queryset=queryset.filter(
+                tags__name__icontains=tag_query
+            )
+
+
         return queryset
 
     def get_context_data(self, **kwargs):
         context=super().get_context_data(**kwargs)
         departure = self.request.GET.get('departure','').strip()
         destination = self.request.GET.get('destination','').strip()   
+        tag_query=self.request.GET.get('tag','').strip()
+
 
         #検索ワードを保持・判定する
         context['departure'] = departure
         context['destination'] = destination
-        context['is_searched'] = bool(departure or destination)  
+        context['tag']=tag_query#検索後も入力欄に残す
+        context['is_searched'] = bool(departure or destination or tag_query)
+
         return context
 
     
