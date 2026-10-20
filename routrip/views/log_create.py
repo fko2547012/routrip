@@ -4,9 +4,10 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.shortcuts import render, redirect
 from django.urls import reverse_lazy
 
-from ..models import Log, Tag, Section
+from ..models import Log, Tag, Section, Spot
 from ..forms.log import LogForm, LogCardFormSet
 from ..utils.photo import get_photo_info
+from ..utils.spot import haversine_m
 
 
 class LogCreateView(LoginRequiredMixin, CreateView):
@@ -48,6 +49,7 @@ class LogCreateView(LoginRequiredMixin, CreateView):
         prev_spot = self.object.start_spot  # 最初の出発側は、出発スポット
         order = 0
         saved_cards = {}
+        new_spots = []
         for index, card_form in enumerate(formset.forms):
             if not card_form.has_changed(): # 何も入力されていない欄は無視
                 continue
@@ -55,6 +57,14 @@ class LogCreateView(LoginRequiredMixin, CreateView):
             card = card_form.save(commit=False)
             card.log = self.object
             card.display_order = order
+
+            new_name = card_form.cleaned_data.get('new_spot_name')
+            if new_name:
+                card.spot = self.get_new_spot(
+                    new_name,
+                    card_form.cleaned_data['new_spot_lat'],
+                    card_form.cleaned_data['new_spot_lng'],
+                    new_spots) 
 
             photo = card_form.cleaned_data.get('image_path')
             if photo:
@@ -87,8 +97,19 @@ class LogCreateView(LoginRequiredMixin, CreateView):
         
         return response
 
-    # def success_url(self):
-    #     pass
+    def get_new_spot(self, name, lat, lng, created):
+        """
+        新しいスポットを作る。
+        この投稿の中で、同じ名前で100m以内のスポットを、すでに作っていたら、それを使う。
+        """
+        for spot in created:
+            if spot.name == name and haversine_m(spot.latitude, spot.longitude, lat, lng) <= 100:
+                return spot
+        spot = Spot.objects.create(
+            name=name, latitude=lat, longitude=lng,
+            registered_user=self.request.user)
+        created.append(spot)
+        return spot
 
 class LogImageSelectView(LoginRequiredMixin, View):
     """

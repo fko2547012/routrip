@@ -30,6 +30,10 @@
       {{ card_form.spot.errors }}
       <label class="pin-row"><span>📍</span>{{ card_form.spot }}</label>
       <div class="spot-candidates"></div>
+      <div class="new-spot"{% if not card_form.new_spot_name.value %} hidden{% endif %}>
+        {{ card_form.new_spot_name.errors }}
+        {{ card_form.new_spot_name }}
+      </div>
     </div>
   </div>
 </div>

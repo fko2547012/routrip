@@ -19,6 +19,7 @@ document.getElementById('card-list').addEventListener('change', (e) => {
   const input = e.target;
   if (!input.matches('input[type="file"]')) return;
 
+  const card = input.closest('.card-form');
   const box = input.closest('.card-image');
   let img = box.querySelector('.preview');
 
@@ -30,6 +31,7 @@ document.getElementById('card-list').addEventListener('change', (e) => {
   if (!file) {  // 選択を取り消したとき
     if (img) img.remove();
     renderThumbs();
+    applyPhotoLocation(card, null);
     return;
   }
 
@@ -41,6 +43,7 @@ document.getElementById('card-list').addEventListener('change', (e) => {
   }
   img.src = URL.createObjectURL(file);
   renderThumbs();
+  applyPhotoLocation(card, file);
 });
 
 
@@ -249,13 +252,18 @@ document.getElementById('to-step-3').addEventListener('click', () => {
 
   // 未入力の確認
   const empty = [...step2.querySelectorAll(REQUIRED)]
-    .filter((el) => el.value.trim() === '');
-  if (empty.length > 0) {
-    empty.forEach((el) => el.classList.add('invalid'));
-    showStep2Error('未入力があります。');
-    empty[0].scrollIntoView({ block: 'center' });
-    return;
-  }
+    .filter((el) => {
+      if (!el.matches('[name$="-spot"]')) return el.value.trim() === '';
+      // スポットは、「既存のスポット」か「新しい場所の名前」の、どちらかがあればよい
+      const newName = el.closest('.card-form').querySelector('[name$="-new_spot_name"]');
+      return el.value === '' && newName.value.trim() === '';
+    })
+    .map((el) => {
+      if (!el.matches('[name$="-spot"]')) return el;
+      // 新しい場所の入力が開いているときは、そちらの名前欄を、赤枠にする
+      const block = el.closest('.card-form').querySelector('.new-spot');
+      return block.hidden ? el : block.querySelector('input');
+    });
 
   // 終了日が、開始日より前でないかの確認
   const start = step2.querySelector('[name="trip_start_date"]');
@@ -399,6 +407,8 @@ picker.addEventListener('change', () => {
 function resetCard(card) {
   delete card.dataset.lat;
   delete card.dataset.lng;
+  closeNewSpot(card);
+  card.querySelector('.spot-candidates').innerHTML = '';
   card.querySelectorAll('input[type="file"], textarea, select').forEach((el) => {
     el.value = '';
   });
@@ -439,14 +449,6 @@ function buildCards(files) {
 
   const cards = cardList.querySelectorAll(':scope > .card-form');
   files.forEach((file, i) => setFile(cards[i], file));
-  files.forEach((file, i) => {
-    const info = photoInfo.get(file);
-    if (info && info.lat !== null) {
-      cards[i].dataset.lat = info.lat;     // カードに、緯度・経度を持たせる
-      cards[i].dataset.lng = info.lng;
-    }
-  });
-  cards.forEach((card) => loadCandidates(card));
 
   renderThumbs();
 }
@@ -562,62 +564,151 @@ function markSelectedCandidate(card) {
   });
 }
 
+const NEW_SPOT_LABEL = '＋ 新しい場所として登録';
+const NEW_SPOT_CANCEL = '登録をやめる';
+
+function newSpotParts(card) {
+  return {
+    block: card.querySelector('.new-spot'),
+    name: card.querySelector('[name$="-new_spot_name"]'),
+    lat: card.querySelector('[name$="-new_spot_lat"]'),
+    lng: card.querySelector('[name$="-new_spot_lng"]'),
+  };
+}
+
+// 新しい場所の入力を閉じて、中身も消す
+function closeNewSpot(card) {
+  const p = newSpotParts(card);
+  p.block.hidden = true;
+  p.name.value = '';
+  p.lat.value = '';
+  p.lng.value = '';
+  const toggle = card.querySelector('.new-spot-toggle');
+  if (toggle) toggle.textContent = NEW_SPOT_LABEL;
+}
+
+// 新しい場所の入力を開く（既存スポットの選択は外す）
+function openNewSpot(card) {
+  const p = newSpotParts(card);
+  spotSelectOf(card).value = '';
+  markSelectedCandidate(card);
+  p.lat.value = card.dataset.lat;
+  p.lng.value = card.dataset.lng;
+  p.block.hidden = false;
+  p.name.focus();
+  card.querySelector('.new-spot-toggle').textContent = NEW_SPOT_CANCEL;
+}
+
 // 1枚のカードの、近くのスポット候補を取ってきて、表示する
 async function loadCandidates(card) {
   const box = card.querySelector('.spot-candidates');
   box.innerHTML = '';
+  closeNewSpot(card);
 
   const lat = card.dataset.lat;
   const lng = card.dataset.lng;
   if (!lat || !lng) return;                  // 位置情報の無いカードは、何も出さない
 
+  let results = [];
+  let failed = false;
   try {
     const res = await fetch(`${nearbyUrl}?lat=${lat}&lng=${lng}`);
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const data = await res.json();
-
-    // 待っている間に、カードが消えた・写真が変わったときは、捨てる
-    if (!card.isConnected || card.dataset.lat !== lat || card.dataset.lng !== lng) return;
-
-    if (data.results.length === 0) {
-      const empty = document.createElement('p');
-      empty.className = 'spot-candidates-note';
-      empty.textContent = '近くに登録済みのスポットはありません';
-      box.append(empty);
-      return;
-    }
-
-    const label = document.createElement('p');
-    label.className = 'spot-candidates-note';
-    label.textContent = '近くのスポット（タップで選択）';
-    box.append(label);
-
-    data.results.forEach((spot) => {
-      const button = document.createElement('button');
-      button.type = 'button';
-      button.className = 'spot-candidate';
-      button.dataset.spotId = spot.id;
-      button.textContent = `📍 ${spot.name}（${Math.round(spot.distance_m)}m）`;
-      box.append(button);
-    });
-    markSelectedCandidate(card);
+    results = (await res.json()).results;
   } catch (err) {
+    failed = true;
     console.error('近くのスポットの取得に失敗しました:', err);
   }
+
+  // 待っている間に、カードが消えた・写真が変わったときは、捨てる
+  if (!card.isConnected || card.dataset.lat !== lat || card.dataset.lng !== lng) return;
+
+  box.innerHTML = '';
+  const note = document.createElement('p');
+  note.className = 'spot-candidates-note';
+  if (failed) {
+    note.textContent = '近くのスポットを取得できませんでした';
+  } else if (results.length > 0) {
+    note.textContent = '近くのスポット（タップで選択）';
+  } else {
+    note.textContent = '近くに登録済みのスポットはありません';
+  }
+  box.append(note);
+
+  results.forEach((spot) => {
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'spot-candidate';
+    button.dataset.spotId = spot.id;
+    button.textContent = `📍 ${spot.name}（${Math.round(spot.distance_m)}m）`;
+    box.append(button);
+  });
+
+  const toggle = document.createElement('button');
+  toggle.type = 'button';
+  toggle.className = 'new-spot-toggle';
+  toggle.textContent = NEW_SPOT_LABEL;
+  box.append(toggle);
+
+  markSelectedCandidate(card);
 }
 
-// 候補を押したら、プルダウンに、そのスポットを入れる
+// カードの写真が変わったときに、そのカードの位置情報と候補を、作り直す
+let locationSeq = 0;
+
+async function applyPhotoLocation(card, file) {
+  const seq = ++locationSeq;
+  card.dataset.locSeq = seq;                  // このカードの「最新の読み取り」の印
+
+  // 前の写真に合わせて入れたものを、全部消す
+  delete card.dataset.lat;
+  delete card.dataset.lng;
+  spotSelectOf(card).value = '';
+  closeNewSpot(card);
+  markSelectedCandidate(card);
+
+  if (!file) {                                // 写真が外されたとき
+    await loadCandidates(card);               // 候補の表示を消す
+    return;
+  }
+
+  const info = await readPhotoInfo(file);
+  if (card.dataset.locSeq !== String(seq)) return;    // 読んでいる間に、また変わったら、捨てる
+
+  if (info.lat !== null) {
+    card.dataset.lat = info.lat;
+    card.dataset.lng = info.lng;
+  }
+  await loadCandidates(card);
+}
+
+// 候補・新しい場所のボタンを押したとき
 document.getElementById('card-list').addEventListener('click', (e) => {
-  const button = e.target.closest('.spot-candidate');
-  if (!button) return;
-  const select = spotSelectOf(button.closest('.card-form'));
-  select.value = button.dataset.spotId;
-  select.dispatchEvent(new Event('change', { bubbles: true }));
+  const candidate = e.target.closest('.spot-candidate');
+  if (candidate) {
+    const card = candidate.closest('.card-form');
+    closeNewSpot(card);                                   // 新しい場所の入力は、閉じる
+    const select = spotSelectOf(card);
+    select.value = candidate.dataset.spotId;
+    select.dispatchEvent(new Event('change', { bubbles: true }));
+    return;
+  }
+
+  const toggle = e.target.closest('.new-spot-toggle');
+  if (toggle) {
+    const card = toggle.closest('.card-form');
+    if (newSpotParts(card).block.hidden) {
+      openNewSpot(card);
+    } else {
+      closeNewSpot(card);
+    }
+  }
 });
 
-// プルダウンが変わったら（手で選んだときも）、印をつけ直す
+// プルダウンが変わったとき（手で選んだときも）
 document.getElementById('card-list').addEventListener('change', (e) => {
-  if (e.target.matches('select[name$="-spot"]')) {
-    markSelectedCandidate(e.target.closest('.card-form'));
-  }
+  if (!e.target.matches('select[name$="-spot"]')) return;
+  const card = e.target.closest('.card-form');
+  if (e.target.value !== '') closeNewSpot(card);          // 既存のスポットを選んだら、新しい場所は閉じる
+  markSelectedCandidate(card);
 });

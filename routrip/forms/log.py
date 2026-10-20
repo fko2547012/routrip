@@ -82,6 +82,32 @@ class LogCardForm(ModelForm):
             'max_value': '移動時間が長すぎます',
         })
 
+    new_spot_name = forms.CharField(
+        required=False, max_length=30,      # Spot.name の max_length に合わせる
+        widget=forms.TextInput(attrs={'placeholder': '新しい場所の名前を入力'}))
+    new_spot_lat = forms.FloatField(
+        required=False, min_value=-90, max_value=90, widget=forms.HiddenInput)
+    new_spot_lng = forms.FloatField(
+        required=False, min_value=-180, max_value=180, widget=forms.HiddenInput)
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['spot'].required = False     # 新しい場所のときは、空でもよい
+
+    def clean(self):
+        cleaned = super().clean()
+        name = (cleaned.get('new_spot_name') or '').strip()
+
+        if name:
+            if cleaned.get('new_spot_lat') is None or cleaned.get('new_spot_lng') is None:
+                self.add_error('new_spot_name', '位置情報を取得できませんでした。既存のスポットを選んでください')
+            else:
+                cleaned['new_spot_name'] = name
+                cleaned['spot'] = None            # 新しい場所を使う
+        elif not cleaned.get('spot'):
+            self.add_error('spot', 'スポットを入力してください')
+        return cleaned
+
     field_order = ['transport', 'duration', 'spot', 'image_path', 'comment']
 
     class Meta:
