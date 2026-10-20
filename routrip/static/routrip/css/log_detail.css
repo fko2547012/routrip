@@ -4,7 +4,7 @@
     margin: 0 auto;
     padding: 24px 20px 48px;
     box-sizing: border-box;
-    color: #333;
+    color: var(---color-navy);
     overflow-wrap: anywhere;
 }
 
@@ -14,14 +14,19 @@
 }
 
 .log-detail .back-button a {
-    color: #555;
+    display: inline-block;
+    padding: 6px 14px;
+    border: 1px solid #64748b;
+    border-radius: 999px;
+    background: transparent;
+    color: #64748b;
+    font-size: 13px;
     text-decoration: none;
 }
 
 .log-detail .back-button a:hover {
-    text-decoration: underline;
+    background: #fff;
 }
-
 /* タイトル */
 .log-detail h1 {
     margin: 0 0 12px;
@@ -32,7 +37,7 @@
 /* 旅行期間 */
 .log-detail .trip-period {
     margin: 0 0 24px;
-    color: #666;
+    color: var(---color-navy);
     font-size: 14px;
     line-height: 1.8;
 }
@@ -40,13 +45,13 @@
 .log-detail hr {
     margin: 0 0 24px;
     border: 0;
-    border-top: 1px solid #ddd;
+    border-top: 1px solid #86888b;
 }
 
 /* 出発地 */
 .log-detail .departure {
     padding: 18px 20px;
-    background: #f4f7f6;
+    background: #fff;
     border: 1px solid #dce6e1;
     border-radius: 12px;
 }
@@ -54,7 +59,7 @@
 .log-detail .departure h2 {
     margin: 0 0 8px;
     font-size: 15px;
-    color: #555;
+    color: var(---color-navy);
 }
 
 .log-detail .departure p {
@@ -72,9 +77,9 @@
     gap: 8px 20px;
     margin: 0 0 0 24px;
     padding: 24px 16px;
-    border-left: 2px dashed #c7d8ce;
+    border-left: 2px dashed #769eb0;
     font-size: 14px;
-    color: #666;
+    color: var(---color-navy);
 }
 
 .log-detail .travel p {
@@ -124,8 +129,8 @@
 /* スポット名 */
 .log-detail .card-spot {
     padding: 14px 20px;
-    background: #f8faf9;
-    border-top: 1px solid #eee;
+    background: #fff;
+    border-top: 1px solid #769eb0;
     font-size: 14px;
     font-weight: bold;
     line-height: 1.7;
