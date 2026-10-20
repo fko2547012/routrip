@@ -4,6 +4,10 @@ from ..models import Log
 
 
 class LogListView(ListView):
+    """
+    ログ一覧ビュー
+    """
+
     model = Log
     paginate_by = 10
     context_object_name = 'logs'
@@ -30,9 +34,12 @@ class LogListView(ListView):
 
         #タグ名での絞り込み
         if tag_query:
-            queryset=queryset.filter(
-                tags__name__icontains=tag_query
-            )
+            tag_list  = tag_query.split()
+            for tag in tag_list:
+                queryset=queryset.filter(
+                    tags__name__icontains=tag
+                )
+            queryset = queryset.distinct() # 複数条件による重複を防ぐため    
 
 
         return queryset
