@@ -446,6 +446,8 @@ function buildCards(files) {
       cards[i].dataset.lng = info.lng;
     }
   });
+  cards.forEach((card) => loadCandidates(card));
+
   renderThumbs();
 }
 
@@ -540,4 +542,82 @@ document.querySelector('#step-1 a.back-button').addEventListener('click', (e) =>
     return;
   }
   skipLeaveWarning = true;
+});
+
+
+// ==========================
+// 近くのスポット候補
+// ==========================
+const nearbyUrl = logForm.dataset.nearbyUrl;
+
+function spotSelectOf(card) {
+  return card.querySelector('select[name$="-spot"]');
+}
+
+// 候補のうち、今選ばれているものに、印をつける
+function markSelectedCandidate(card) {
+  const selected = spotSelectOf(card).value;
+  card.querySelectorAll('.spot-candidate').forEach((button) => {
+    button.classList.toggle('is-selected', button.dataset.spotId === selected);
+  });
+}
+
+// 1枚のカードの、近くのスポット候補を取ってきて、表示する
+async function loadCandidates(card) {
+  const box = card.querySelector('.spot-candidates');
+  box.innerHTML = '';
+
+  const lat = card.dataset.lat;
+  const lng = card.dataset.lng;
+  if (!lat || !lng) return;                  // 位置情報の無いカードは、何も出さない
+
+  try {
+    const res = await fetch(`${nearbyUrl}?lat=${lat}&lng=${lng}`);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const data = await res.json();
+
+    // 待っている間に、カードが消えた・写真が変わったときは、捨てる
+    if (!card.isConnected || card.dataset.lat !== lat || card.dataset.lng !== lng) return;
+
+    if (data.results.length === 0) {
+      const empty = document.createElement('p');
+      empty.className = 'spot-candidates-note';
+      empty.textContent = '近くに登録済みのスポットはありません';
+      box.append(empty);
+      return;
+    }
+
+    const label = document.createElement('p');
+    label.className = 'spot-candidates-note';
+    label.textContent = '近くのスポット（タップで選択）';
+    box.append(label);
+
+    data.results.forEach((spot) => {
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.className = 'spot-candidate';
+      button.dataset.spotId = spot.id;
+      button.textContent = `📍 ${spot.name}（${Math.round(spot.distance_m)}m）`;
+      box.append(button);
+    });
+    markSelectedCandidate(card);
+  } catch (err) {
+    console.error('近くのスポットの取得に失敗しました:', err);
+  }
+}
+
+// 候補を押したら、プルダウンに、そのスポットを入れる
+document.getElementById('card-list').addEventListener('click', (e) => {
+  const button = e.target.closest('.spot-candidate');
+  if (!button) return;
+  const select = spotSelectOf(button.closest('.card-form'));
+  select.value = button.dataset.spotId;
+  select.dispatchEvent(new Event('change', { bubbles: true }));
+});
+
+// プルダウンが変わったら（手で選んだときも）、印をつけ直す
+document.getElementById('card-list').addEventListener('change', (e) => {
+  if (e.target.matches('select[name$="-spot"]')) {
+    markSelectedCandidate(e.target.closest('.card-form'));
+  }
 });

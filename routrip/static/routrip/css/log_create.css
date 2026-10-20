@@ -172,6 +172,39 @@
     display: none;
 }
 
+/* ==========================
+   ログ作成：
+========================== */
+.log-create .spot-candidates {
+    margin-top: 8px;
+}
+
+.log-create .spot-candidates-note {
+    margin: 0 0 4px;
+    font-size: 12px;
+    color: var(--color-gray-text);
+}
+
+.log-create .spot-candidate {
+    display: block;
+    width: 100%;
+    margin-bottom: 4px;
+    padding: 8px 10px;
+    background-color: var(--color-lavender);
+    border: 1px solid #d5e3f3;
+    color: var(--color-navy);
+    font-size: 13px;
+    font-weight: normal;
+    text-align: left;
+}
+
+.log-create .spot-candidate.is-selected {
+    background-color: #e3eefb;
+    border-color: var(--color-navy);
+    font-weight: bold;
+}
+
+
 
 /* ==========================
    ログ作成：タグ

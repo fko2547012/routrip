@@ -6,7 +6,8 @@
 {% endblock %}
 
 {% block content %}
-<form class="log-create" method="post" enctype="multipart/form-data" novalidate id="log-form">
+<form method="post" enctype="multipart/form-data" novalidate id="log-form" class="log-create"
+      data-nearby-url="{% url 'routrip:nearby_spots' %}">
   {% csrf_token %}
 
   {# ===== 画面1：画像選択 ===== #}
