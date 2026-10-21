@@ -1,8 +1,8 @@
+
 import requests
 
-NOMINATIM_URL = "https://nominatim.openstreetmap.org/search"
 
-# プロジェクトを識別できる User-Agent を指定する
+NOMINATIM_URL = "https://nominatim.openstreetmap.org/search"
 USER_AGENT = "routrip-student-project/0.1"
 
 
@@ -13,7 +13,12 @@ def search_places(query) -> dict:
     戻り値:
         {
             "results": [
-                {"name": "...", "lat": 33.59, "lng": 130.40}
+                {
+                    "name": "...",
+                    "lat": 33.59,
+                    "lng": 130.40,
+                    "address": "..."
+                }
             ],
             "error": None
         }
@@ -31,6 +36,7 @@ def search_places(query) -> dict:
         "format": "jsonv2",
         "limit": 5,
         "accept-language": "ja",
+        "addressdetails": 1,
     }
 
     headers = {
@@ -63,6 +69,7 @@ def search_places(query) -> dict:
                 "name": name,
                 "lat": latitude,
                 "lng": longitude,
+                "address": display_name,
             })
 
         return {
