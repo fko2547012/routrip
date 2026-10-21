@@ -7,7 +7,8 @@
 
 {% block content %}
 <form method="post" enctype="multipart/form-data" novalidate id="log-form" class="log-create"
-      data-nearby-url="{% url 'routrip:nearby_spots' %}">
+      data-nearby-url="{% url 'routrip:nearby_spots' %}"
+      data-search-url="{% url 'routrip:search_spots' %}">
   {% csrf_token %}
 
   {# ===== 画面1：画像選択 ===== #}

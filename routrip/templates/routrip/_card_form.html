@@ -29,6 +29,16 @@
     <div class="card-spot field">
       {{ card_form.spot.errors }}
       <label class="pin-row"><span>📍</span>{{ card_form.spot }}</label>
+
+      <div class="place-search">
+        <p class="spot-candidates-note">位置情報が無いので、地名で検索してください（同じ名前が多いときは、「福岡県 福岡市」のように、県名や市名を足すと、絞れます）</p>
+        <div class="place-search-row">
+          <input type="text" class="place-query" placeholder="地名を入力（例：福岡市）" autocomplete="off">
+          <button type="button" class="place-search-button">検索</button>
+        </div>
+        <div class="place-results"></div>
+      </div>
+
       <div class="spot-candidates"></div>
       <div class="new-spot"{% if not card_form.new_spot_name.value %} hidden{% endif %}>
         {{ card_form.new_spot_name.errors }}

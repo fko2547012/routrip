@@ -407,8 +407,12 @@ picker.addEventListener('change', () => {
 function resetCard(card) {
   delete card.dataset.lat;
   delete card.dataset.lng;
+  delete card.dataset.locSource;
+  delete card.dataset.placeName;
   closeNewSpot(card);
   card.querySelector('.spot-candidates').innerHTML = '';
+  resetPlaceSearch(card);
+  updatePlaceSearch(card);
   card.querySelectorAll('input[type="file"], textarea, select').forEach((el) => {
     el.value = '';
   });
@@ -594,6 +598,9 @@ function openNewSpot(card) {
   markSelectedCandidate(card);
   p.lat.value = card.dataset.lat;
   p.lng.value = card.dataset.lng;
+  if (card.dataset.placeName && !p.name.value) {
+    p.name.value = card.dataset.placeName;
+  }
   p.block.hidden = false;
   p.name.focus();
   card.querySelector('.new-spot-toggle').textContent = NEW_SPOT_CANCEL;
@@ -656,29 +663,48 @@ async function loadCandidates(card) {
 // カードの写真が変わったときに、そのカードの位置情報と候補を、作り直す
 let locationSeq = 0;
 
+// 位置情報が写真から取れたカードでは、検索の欄を隠す
+function updatePlaceSearch(card) {
+  card.querySelector('.place-search').hidden = card.dataset.locSource === 'photo';
+}
+
+// 検索の欄の中身を、空にする
+function resetPlaceSearch(card) {
+  card.querySelector('.place-query').value = '';
+  card.querySelector('.place-results').innerHTML = '';
+}
+
+// カードの写真が変わったときに、そのカードの位置情報と候補を、作り直す
 async function applyPhotoLocation(card, file) {
   const seq = ++locationSeq;
-  card.dataset.locSeq = seq;                  // このカードの「最新の読み取り」の印
+  card.dataset.locSeq = seq;
 
-  // 前の写真に合わせて入れたものを、全部消す
+  // 前の写真・前の検索に合わせて入れたものを、全部消す
   delete card.dataset.lat;
   delete card.dataset.lng;
+  delete card.dataset.locSource;
+  delete card.dataset.placeName;
   spotSelectOf(card).value = '';
   closeNewSpot(card);
   markSelectedCandidate(card);
+  resetPlaceSearch(card);
 
-  if (!file) {                                // 写真が外されたとき
-    await loadCandidates(card);               // 候補の表示を消す
+  if (!file) {                                // 写真が無い → 地名で検索してもらう
+    updatePlaceSearch(card);
+    await loadCandidates(card);
     return;
   }
 
+  card.querySelector('.place-search').hidden = true;      // 読み取りの間は、隠す
   const info = await readPhotoInfo(file);
-  if (card.dataset.locSeq !== String(seq)) return;    // 読んでいる間に、また変わったら、捨てる
+  if (card.dataset.locSeq !== String(seq)) return;        // 読んでいる間に、また変わったら、捨てる
 
   if (info.lat !== null) {
     card.dataset.lat = info.lat;
     card.dataset.lng = info.lng;
+    card.dataset.locSource = 'photo';
   }
+  updatePlaceSearch(card);                                // 位置情報が無ければ、検索の欄を出す
   await loadCandidates(card);
 }
 
@@ -711,4 +737,123 @@ document.getElementById('card-list').addEventListener('change', (e) => {
   const card = e.target.closest('.card-form');
   if (e.target.value !== '') closeNewSpot(card);          // 既存のスポットを選んだら、新しい場所は閉じる
   markSelectedCandidate(card);
+});
+
+// ==========================
+// 地名検索（位置情報の無いカード）
+// ==========================
+const searchUrl = logForm.dataset.searchUrl;
+
+// 住所から、見分けに使う部分だけを取り出す（先頭の名前と、末尾の「日本」は、除く）
+function shortAddress(place) {
+  const parts = (place.address || '').split(',').map((s) => s.trim()).filter(Boolean);
+  if (parts[0] === place.name) parts.shift();
+  if (parts[parts.length - 1] === '日本') parts.pop();
+  return parts.join('、');
+}
+
+async function searchPlaces(card) {
+  const button = card.querySelector('.place-search-button');
+  const box = card.querySelector('.place-results');
+  const query = card.querySelector('.place-query').value.trim();
+  if (!query || button.disabled) return;
+
+  // 公開サーバーの利用ルール（1秒に1回まで）を守るため、押したあと1秒は、押せなくする
+  button.disabled = true;
+  setTimeout(() => { button.disabled = false; }, 1000);
+
+  const seq = String(++locationSeq);
+  card.dataset.searchSeq = seq;
+  box.innerHTML = '';
+  const note = document.createElement('p');
+  note.className = 'spot-candidates-note';
+  note.textContent = '検索中…';
+  box.append(note);
+
+  let data = { results: [], error: '検索できませんでした' };
+  try {
+    const res = await fetch(`${searchUrl}?q=${encodeURIComponent(query)}`);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    data = await res.json();
+  } catch (err) {
+    console.error('地名検索に失敗しました:', err);
+  }
+
+  if (!card.isConnected || card.dataset.searchSeq !== seq) return;   // 古い検索の結果は、捨てる
+
+  box.innerHTML = '';
+  const message = document.createElement('p');
+  message.className = 'spot-candidates-note';
+  if (data.error) {
+    message.textContent = data.error;
+  } else if (data.results.length === 0) {
+    message.textContent = '見つかりませんでした。住所や市区町村名など、別の言葉で検索してみてください';
+  } else {
+    message.textContent = '地点を選んでください';
+  }
+  box.append(message);
+
+  data.results.forEach((place) => {
+    const item = document.createElement('button');
+    item.type = 'button';
+    item.className = 'place-result';
+    item.dataset.name = place.name;
+    item.dataset.detail = shortAddress(place);
+    item.dataset.lat = place.lat;
+    item.dataset.lng = place.lng;
+
+    const nameLine = document.createElement('span');
+    nameLine.className = 'place-result-name';
+    nameLine.textContent = `🔎 ${place.name}`;
+    item.append(nameLine);
+
+    if (item.dataset.detail) {
+      const detailLine = document.createElement('span');
+      detailLine.className = 'place-result-detail';
+      detailLine.textContent = item.dataset.detail;
+      item.append(detailLine);
+    }
+    box.append(item);
+  });
+}
+
+// 検索ボタン・検索結果を押したとき
+document.getElementById('card-list').addEventListener('click', (e) => {
+  const searchButton = e.target.closest('.place-search-button');
+  if (searchButton) {
+    searchPlaces(searchButton.closest('.card-form'));
+    return;
+  }
+
+  const result = e.target.closest('.place-result');
+  if (!result) return;
+  const card = result.closest('.card-form');
+
+  // 選んだ地点を、このカードの位置として扱う
+  card.dataset.lat = result.dataset.lat;
+  card.dataset.lng = result.dataset.lng;
+  card.dataset.locSource = 'search';
+  card.dataset.placeName = result.dataset.name;
+  card.dataset.searchSeq = '';                                 // 実行中の検索があれば、無効にする
+  spotSelectOf(card).value = '';
+  markSelectedCandidate(card);
+
+  const box = card.querySelector('.place-results');
+  box.innerHTML = '';
+  const chosen = document.createElement('p');
+  chosen.className = 'place-chosen';
+  chosen.textContent = result.dataset.detail
+    ? `選んだ地点：${result.dataset.name}（${result.dataset.detail}）`
+    : `選んだ地点：${result.dataset.name}`;
+  box.append(chosen);
+
+  loadCandidates(card);                                        // 近くの登録済みスポットを、探す
+});
+
+// 検索欄で Enter を押したときも、検索する（日本語の変換の確定は、除く）
+document.getElementById('card-list').addEventListener('keydown', (e) => {
+  if (e.key !== 'Enter' || e.isComposing) return;
+  if (!e.target.matches('.place-query')) return;
+  e.preventDefault();
+  searchPlaces(e.target.closest('.card-form'));
 });

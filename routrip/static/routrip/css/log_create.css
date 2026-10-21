@@ -220,6 +220,57 @@
     font-weight: normal;
 }
 
+.log-create .place-search {
+    margin-bottom: 8px;
+}
+
+.log-create .place-search-row {
+    display: flex;
+    gap: 8px;
+}
+
+.log-create .place-search-row input {
+    flex: 1;
+    min-width: 0;
+}
+
+.log-create .place-search-row button {
+    flex-shrink: 0;
+}
+
+.log-create .place-results {
+    margin-top: 6px;
+}
+
+.log-create .place-result {
+    display: block;
+    width: 100%;
+    margin-bottom: 4px;
+    padding: 8px 10px;
+    background-color: var(--color-lavender);
+    border: 1px solid #d5e3f3;
+    color: var(--color-navy);
+    font-size: 13px;
+    font-weight: normal;
+    text-align: left;
+}
+
+.log-create .place-chosen {
+    margin: 0 0 4px;
+    font-size: 13px;
+    font-weight: bold;
+}
+
+.log-create .place-result-name {
+    display: block;
+}
+
+.log-create .place-result-detail {
+    display: block;
+    margin-top: 2px;
+    font-size: 11px;
+    color: var(--color-gray-text);
+}
 
 /* ==========================
    ログ作成：タグ
