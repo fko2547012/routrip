@@ -24,5 +24,5 @@ urlpatterns = [
     path('spots/search/', search_spots, name='search_spots'),
     path('spots/nearby/', nearby_spots, name='nearby_spots'),
     path('spots/suggest/', suggest_spots, name='suggest_spots'),
-    path('spots/resolve/', resolve_spot, name='resolve_spot'),
+    path('spots/resolve/', resolve_spot, name='resolve_spots'),
 ]
