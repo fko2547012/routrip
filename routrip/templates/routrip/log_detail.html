@@ -14,7 +14,16 @@
         <a href="{% url 'routrip:log_list' %}">← 戻る</a>
     </div>
 
-    <h1>{{ log.title }}</h1>
+    <!-- タイトルの右隣にタグ -->
+    <div class="detail-heading">
+        <h1>{{ log.title }}</h1>
+
+        <div class="detail-tags">
+            {% for tag in log.tags.all %}
+                <span class="detail-tag">#{{ tag.name }}</span>
+            {% endfor %}
+        </div>
+    </div>
 
     <p class="trip-period">旅行期間
     {{ log.trip_start_date|date:"Y/m/d" }}
