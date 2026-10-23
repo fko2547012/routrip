@@ -14,9 +14,27 @@
                             <span>No Image</span>
                         </div>
                     {% endif %}
-                    <span class="log-title">{{ log.title  }}</span>
-                </div>
-                </a> 
+
+                    <!--情報エリア（タイトルとタグ）-->    
+                    <div class="log-info">    
+                        <span class="log-title">{{ log.title  }}</span>
+
+                        <!--タイトル下のタグ一覧-->
+                        {% if log.tags.all %}
+                            <div class="log-tags">
+                                {% for tag in log.tags.all %}
+                                    <span class="log-tag-badge">#{{ tag.name }}</span>
+                                {% endfor %}
+                            </div>
+                        {% endif %}            
+
+                    </div>
+                </div>  
+                
+                <div class="log-date">
+                    {{ log.posted_at|date:"Y.m.d"}}
+                </div>    
+            </a> 
         </div>
         
     {% empty %}
