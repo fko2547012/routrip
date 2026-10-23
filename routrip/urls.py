@@ -6,7 +6,7 @@ from .views.log_create import LogCreateView
 from .views.log_detail import LogDetailView
 from .views.log_edit import LogUpdateView
 from .views.log_delete import LogDeleteView
-from .views.spot import search_spots, nearby_spots, suggest_spots
+from .views.spot import search_spots, nearby_spots, suggest_spots, resolve_spot
 
 app_name = 'routrip'
 urlpatterns = [
@@ -23,5 +23,6 @@ urlpatterns = [
     path('log/create/', LogCreateView.as_view(), name='log_create'),
     path('spots/search/', search_spots, name='search_spots'),
     path('spots/nearby/', nearby_spots, name='nearby_spots'),
-    path('spots/suggest/', suggest_spots, name='suggest_spots')
+    path('spots/suggest/', suggest_spots, name='suggest_spots'),
+    path('spots/resolve/', resolve_spot, name='resolve_spot'),
 ]

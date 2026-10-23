@@ -168,3 +168,47 @@ def suggest_spots(request):
     ]
 
     return JsonResponse({"results": results})
+
+def resolve_spot(request):
+    """
+    ログ作成用のスポット解決API（仮版）。
+
+    正式実装では、DB検索と座標からの逆引きを行う。
+    現段階では画面側の開発用に固定値を返す。
+    """
+    if not request.user.is_authenticated:
+        return JsonResponse(
+            {"error": "ログインが必要です"},
+            status=401,
+        )
+
+    if request.method != "GET":
+        return JsonResponse(
+            {"error": "GETリクエストを使用してください"},
+            status=405,
+        )
+
+    try:
+        lat = float(request.GET["lat"])
+        lng = float(request.GET["lng"])
+
+        if not math.isfinite(lat) or not math.isfinite(lng):
+            raise ValueError
+
+        if not -90 <= lat <= 90 or not -180 <= lng <= 180:
+            raise ValueError
+
+    except (KeyError, TypeError, ValueError):
+        return JsonResponse(
+            {"error": "緯度・経度の指定が不正です"},
+            status=400,
+        )
+
+    # 仮版：画面側の動作確認用の固定値
+    return JsonResponse({
+        "source": "reverse",
+        "spot": None,
+        "name": "テスト地点",
+        "address": "テスト住所",
+        "error": None,
+    })
