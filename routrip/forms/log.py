@@ -109,10 +109,12 @@ class LogCardForm(ModelForm):
         return cleaned
 
     field_order = ['transport', 'duration', 'spot', 'image_path', 'comment']
+    spot_label = forms.CharField(required=False, widget=forms.HiddenInput)
 
     class Meta:
         model = Logcard
         fields = ['spot', 'image_path', 'comment']
+        widgets = {'spot': forms.HiddenInput}   # 画面に戻すときの、表示用の名前
         error_messages = {
             'spot': {'required': 'スポットを入力してください'},
             'comment': {'required': 'コメントを入力してください'},

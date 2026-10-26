@@ -1,0 +1,20 @@
+{{ spot_form.spot.errors }}
+{{ spot_form.new_spot_name.errors }}
+
+<div class="spot-status" aria-live="polite"></div>
+
+<div class="spot-resolved" hidden>
+    <span>📍</span>
+    <span class="spot-name"></span>
+    {{ card_form.new_spot_name }}
+    <button type="button" class="spot-change">変更</button>
+</div>
+
+<div class="place-search">
+  <p class="spot-candidates-note place-search-note"></p>
+  <div class="place-search-row">
+    <input type="text" class="place-query" placeholder="地名を入力（例：福岡市）" autocomplete="off">
+    <button type="button" class="place-search-button">検索</button>
+  </div>
+  <div class="place-results"></div>
+</div>

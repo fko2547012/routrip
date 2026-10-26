@@ -272,6 +272,49 @@
     color: var(--color-gray-text);
 }
 
+.log-create .spot-area {
+    padding: 8px;
+    border: 1px solid transparent;
+    border-radius: var(--radius);
+}
+
+.log-create .spot-area.invalid {
+    border-color: var(--color-danger);
+}
+
+.log-create .spot-status {
+    font-size: 13px;
+    color: var(--color-gray-text);
+}
+
+.log-create .spot-resolved {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.log-create .spot-name {
+    flex: 1;
+    font-weight: bold;
+}
+
+.log-create .spot-resolved input {
+    flex: 1;
+    min-width: 0;
+}
+
+.log-create .spot-change {
+    flex-shrink: 0;
+    padding: 6px 12px;
+    font-size: 13px;
+}
+
+/* display を指定した要素でも、hidden が効くようにする（大事） */
+.log-create .spot-resolved[hidden],
+.log-create .place-search[hidden] {
+    display: none;
+}
+
 /* ==========================
    ログ作成：タグ
 ========================== */

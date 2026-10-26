@@ -11,6 +11,8 @@ document.getElementById('add-card').addEventListener('click', () => {
   document.getElementById('card-list').insertAdjacentHTML('beforeend', html);
 
   totalInput.value = index + 1;
+  const newCard = document.getElementById('card-list').lastElementChild;     // ← 足す
+  initSpotArea(newCard.querySelector('.spot-area')); 
 });
 
 
@@ -232,9 +234,7 @@ const REQUIRED = [
   '[name="title"]',
   '[name="trip_start_date"]',
   '[name="trip_end_date"]',
-  '[name="start_spot"]',
   '[name$="-transport"]',
-  '[name$="-spot"]',
   '[name$="-comment"]',
 ].join(',');
 
@@ -252,18 +252,17 @@ document.getElementById('to-step-3').addEventListener('click', () => {
 
   // 未入力の確認
   const empty = [...step2.querySelectorAll(REQUIRED)]
-    .filter((el) => {
-      if (!el.matches('[name$="-spot"]')) return el.value.trim() === '';
-      // スポットは、「既存のスポット」か「新しい場所の名前」の、どちらかがあればよい
-      const newName = el.closest('.card-form').querySelector('[name$="-new_spot_name"]');
-      return el.value === '' && newName.value.trim() === '';
-    })
-    .map((el) => {
-      if (!el.matches('[name$="-spot"]')) return el;
-      // 新しい場所の入力が開いているときは、そちらの名前欄を、赤枠にする
-      const block = el.closest('.card-form').querySelector('.new-spot');
-      return block.hidden ? el : block.querySelector('input');
-    });
+    .filter((el) => el.value.trim() === '');
+  const incompleteAreas = [...step2.querySelectorAll('.spot-area')]
+    .filter((area) => !spotIsComplete(area));
+
+  if (empty.length > 0 || incompleteAreas.length > 0) {
+    empty.forEach((el) => el.classList.add('invalid'));
+    incompleteAreas.forEach((area) => area.classList.add('invalid'));
+    showStep2Error('未入力があります。');
+    (empty[0] || incompleteAreas[0]).scrollIntoView({ block: 'center' });
+    return;
+  }
 
   // 終了日が、開始日より前でないかの確認
   const start = step2.querySelector('[name="trip_start_date"]');
@@ -409,10 +408,7 @@ function resetCard(card) {
   delete card.dataset.lng;
   delete card.dataset.locSource;
   delete card.dataset.placeName;
-  closeNewSpot(card);
   card.querySelector('.spot-candidates').innerHTML = '';
-  resetPlaceSearch(card);
-  updatePlaceSearch(card);
   card.querySelectorAll('input[type="file"], textarea, select').forEach((el) => {
     el.value = '';
   });
@@ -552,223 +548,214 @@ document.querySelector('#step-1 a.back-button').addEventListener('click', (e) =>
 
 
 // ==========================
-// 近くのスポット候補
+// スポット（自動で判定／地名で検索）
 // ==========================
+const resolveUrl = logForm.dataset.resolveUrl;
 const nearbyUrl = logForm.dataset.nearbyUrl;
+const searchUrl = logForm.dataset.searchUrl;
 
-function spotSelectOf(card) {
-  return card.querySelector('select[name$="-spot"]');
+const NOTE_NO_PHOTO = '写真が無いので、地名で検索してください';
+const NOTE_NO_GPS = '写真に位置情報が無いので、地名で検索してください';
+const NOTE_CHANGE = '地名で検索して、場所を選んでください';
+const NOTE_HINT = '（同じ名前が多いときは、「福岡県 福岡市」のように、県名や市名を足すと絞れます）';
+
+let locationSeq = 0;
+
+// 実行中の処理に番号をつける（あとから来た古い結果を、捨てるため）
+function beginTask(area) {
+  const seq = ++locationSeq;
+  area.dataset.seq = String(seq);
+  return seq;
 }
 
-// 候補のうち、今選ばれているものに、印をつける
-function markSelectedCandidate(card) {
-  const selected = spotSelectOf(card).value;
-  card.querySelectorAll('.spot-candidate').forEach((button) => {
-    button.classList.toggle('is-selected', button.dataset.spotId === selected);
-  });
+function isCurrent(area, seq) {
+  return area.isConnected && area.dataset.seq === String(seq);
 }
 
-const NEW_SPOT_LABEL = '＋ 新しい場所として登録';
-const NEW_SPOT_CANCEL = '登録をやめる';
+function makeNote(text) {
+  const note = document.createElement('p');
+  note.className = 'spot-candidates-note';
+  note.textContent = text;
+  return note;
+}
 
-function newSpotParts(card) {
+// スポット欄の中の部品を、まとめて取り出す
+function spotParts(area) {
+  const root = area.closest('.card-form, .start-box');
   return {
-    block: card.querySelector('.new-spot'),
-    name: card.querySelector('[name$="-new_spot_name"]'),
-    lat: card.querySelector('[name$="-new_spot_lat"]'),
-    lng: card.querySelector('[name$="-new_spot_lng"]'),
+    id: root.querySelector('[name$="-spot"]'),
+    label: root.querySelector('[name$="-spot_label"]'),
+    newName: root.querySelector('[name$="-new_spot_name"]'),
+    newLat: root.querySelector('[name$="-new_spot_lat"]'),
+    newLng: root.querySelector('[name$="-new_spot_lng"]'),
+    status: area.querySelector('.spot-status'),
+    resolved: area.querySelector('.spot-resolved'),
+    nameLabel: area.querySelector('.spot-name'),
+    search: area.querySelector('.place-search'),
+    searchNote: area.querySelector('.place-search-note'),
+    query: area.querySelector('.place-query'),
+    results: area.querySelector('.place-results'),
   };
 }
 
-// 新しい場所の入力を閉じて、中身も消す
-function closeNewSpot(card) {
-  const p = newSpotParts(card);
-  p.block.hidden = true;
-  p.name.value = '';
-  p.lat.value = '';
-  p.lng.value = '';
-  const toggle = card.querySelector('.new-spot-toggle');
-  if (toggle) toggle.textContent = NEW_SPOT_LABEL;
+// スポットが決まっているか（「次へ」の確認で使う）
+function spotIsComplete(area) {
+  const p = spotParts(area);
+  if (p.id.value !== '') return true;
+  return p.newName.value.trim() !== '' && p.newLat.value !== '' && p.newLng.value !== '';
 }
 
-// 新しい場所の入力を開く（既存スポットの選択は外す）
-function openNewSpot(card) {
-  const p = newSpotParts(card);
-  spotSelectOf(card).value = '';
-  markSelectedCandidate(card);
-  p.lat.value = card.dataset.lat;
-  p.lng.value = card.dataset.lng;
-  if (card.dataset.placeName && !p.name.value) {
-    p.name.value = card.dataset.placeName;
-  }
-  p.block.hidden = false;
-  p.name.focus();
-  card.querySelector('.new-spot-toggle').textContent = NEW_SPOT_CANCEL;
+// 「決まった」状態の表示にする（editable: 新しい場所なので、名前を直せる）
+function showResolved(area, text, editable) {
+  const p = spotParts(area);
+  p.status.textContent = '';
+  p.search.hidden = true;
+  p.resolved.hidden = false;
+  p.nameLabel.hidden = editable;
+  p.nameLabel.textContent = text;
+  p.newName.hidden = !editable;
+  area.classList.remove('invalid');
 }
 
-// 1枚のカードの、近くのスポット候補を取ってきて、表示する
-async function loadCandidates(card) {
-  const box = card.querySelector('.spot-candidates');
-  box.innerHTML = '';
-  closeNewSpot(card);
+// 地名検索の欄を出す
+function showSearch(area, note) {
+  const p = spotParts(area);
+  p.resolved.hidden = true;
+  p.status.textContent = '';
+  p.search.hidden = false;
+  p.searchNote.textContent = note + NOTE_HINT;
+}
 
-  const lat = card.dataset.lat;
-  const lng = card.dataset.lng;
-  if (!lat || !lng) return;                  // 位置情報の無いカードは、何も出さない
+// 選んだものを、全部消す
+function clearSpot(area) {
+  const p = spotParts(area);
+  p.id.value = '';
+  p.label.value = '';
+  p.newName.value = '';
+  p.newLat.value = '';
+  p.newLng.value = '';
+  p.resolved.hidden = true;
+  p.results.innerHTML = '';
+  p.query.value = '';
+  p.status.textContent = '';
+}
 
-  let results = [];
-  let failed = false;
-  try {
-    const res = await fetch(`${nearbyUrl}?lat=${lat}&lng=${lng}`);
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    results = (await res.json()).results;
-  } catch (err) {
-    failed = true;
-    console.error('近くのスポットの取得に失敗しました:', err);
-  }
+// 登録済みのスポットに決める
+function setDbSpot(area, spot) {
+  const p = spotParts(area);
+  p.id.value = spot.id;
+  p.label.value = spot.name;
+  p.newName.value = '';
+  p.newLat.value = '';
+  p.newLng.value = '';
+  showResolved(area, spot.name, false);
+}
 
-  // 待っている間に、カードが消えた・写真が変わったときは、捨てる
-  if (!card.isConnected || card.dataset.lat !== lat || card.dataset.lng !== lng) return;
+// 新しい場所に決める（名前は、あとから直せる）
+function setNewSpot(area, name, lat, lng) {
+  const p = spotParts(area);
+  p.id.value = '';
+  p.label.value = name;
+  p.newName.value = name;
+  p.newLat.value = lat;
+  p.newLng.value = lng;
+  showResolved(area, '', true);
+}
 
-  box.innerHTML = '';
-  const note = document.createElement('p');
-  note.className = 'spot-candidates-note';
-  if (failed) {
-    note.textContent = '近くのスポットを取得できませんでした';
-  } else if (results.length > 0) {
-    note.textContent = '近くのスポット（タップで選択）';
+// 最初の状態にする（サーバーのエラーで戻ってきたときは、入っていた内容を表示する）
+function initSpotArea(area) {
+  const p = spotParts(area);
+  if (p.id.value !== '') {
+    showResolved(area, p.label.value || '選択済みのスポット', false);
+  } else if (p.newName.value.trim() !== '' && p.newLat.value !== '' && p.newLng.value !== '') {
+    showResolved(area, '', true);
   } else {
-    note.textContent = '近くに登録済みのスポットはありません';
+    showSearch(area, NOTE_NO_PHOTO);
   }
-  box.append(note);
-
-  results.forEach((spot) => {
-    const button = document.createElement('button');
-    button.type = 'button';
-    button.className = 'spot-candidate';
-    button.dataset.spotId = spot.id;
-    button.textContent = `📍 ${spot.name}（${Math.round(spot.distance_m)}m）`;
-    box.append(button);
-  });
-
-  const toggle = document.createElement('button');
-  toggle.type = 'button';
-  toggle.className = 'new-spot-toggle';
-  toggle.textContent = NEW_SPOT_LABEL;
-  box.append(toggle);
-
-  markSelectedCandidate(card);
 }
 
-// カードの写真が変わったときに、そのカードの位置情報と候補を、作り直す
-let locationSeq = 0;
+// 写真の座標から、場所を自動で決める
+async function resolveFromPhoto(area, lat, lng, seq) {
+  const p = spotParts(area);
+  p.status.textContent = '📍 場所を調べています…';
 
-// 位置情報が写真から取れたカードでは、検索の欄を隠す
-function updatePlaceSearch(card) {
-  card.querySelector('.place-search').hidden = card.dataset.locSource === 'photo';
+  let data = null;
+  try {
+    const res = await fetch(`${resolveUrl}?lat=${lat}&lng=${lng}`);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    data = await res.json();
+  } catch (err) {
+    console.error('場所の判定に失敗しました:', err);
+  }
+  if (!isCurrent(area, seq)) return;
+
+  if (data && data.source === 'db') {
+    setDbSpot(area, data.spot);
+  } else if (data && data.source === 'reverse') {
+    setNewSpot(area, data.name, lat, lng);       // 座標は、写真のものを使う
+  } else {
+    showSearch(area, '場所の名前を取得できませんでした。地名で検索してください');
+  }
 }
 
-// 検索の欄の中身を、空にする
-function resetPlaceSearch(card) {
-  card.querySelector('.place-query').value = '';
-  card.querySelector('.place-results').innerHTML = '';
-}
-
-// カードの写真が変わったときに、そのカードの位置情報と候補を、作り直す
+// カードの写真が変わったときに、そのカードのスポットを、作り直す
 async function applyPhotoLocation(card, file) {
-  const seq = ++locationSeq;
-  card.dataset.locSeq = seq;
-
-  // 前の写真・前の検索に合わせて入れたものを、全部消す
+  const area = card.querySelector('.spot-area');
+  const seq = beginTask(area);
   delete card.dataset.lat;
   delete card.dataset.lng;
-  delete card.dataset.locSource;
-  delete card.dataset.placeName;
-  spotSelectOf(card).value = '';
-  closeNewSpot(card);
-  markSelectedCandidate(card);
-  resetPlaceSearch(card);
+  clearSpot(area);
 
-  if (!file) {                                // 写真が無い → 地名で検索してもらう
-    updatePlaceSearch(card);
-    await loadCandidates(card);
+  if (!file) {
+    showSearch(area, NOTE_NO_PHOTO);
     return;
   }
 
-  card.querySelector('.place-search').hidden = true;      // 読み取りの間は、隠す
-  const info = await readPhotoInfo(file);
-  if (card.dataset.locSeq !== String(seq)) return;        // 読んでいる間に、また変わったら、捨てる
+  spotParts(area).status.textContent = '📍 写真の位置情報を読んでいます…';
+  const info = photoInfo.get(file) || await readPhotoInfo(file);
+  if (!isCurrent(area, seq)) return;
 
-  if (info.lat !== null) {
-    card.dataset.lat = info.lat;
-    card.dataset.lng = info.lng;
-    card.dataset.locSource = 'photo';
-  }
-  updatePlaceSearch(card);                                // 位置情報が無ければ、検索の欄を出す
-  await loadCandidates(card);
-}
-
-// 候補・新しい場所のボタンを押したとき
-document.getElementById('card-list').addEventListener('click', (e) => {
-  const candidate = e.target.closest('.spot-candidate');
-  if (candidate) {
-    const card = candidate.closest('.card-form');
-    closeNewSpot(card);                                   // 新しい場所の入力は、閉じる
-    const select = spotSelectOf(card);
-    select.value = candidate.dataset.spotId;
-    select.dispatchEvent(new Event('change', { bubbles: true }));
+  if (info.lat === null) {
+    showSearch(area, NOTE_NO_GPS);
     return;
   }
-
-  const toggle = e.target.closest('.new-spot-toggle');
-  if (toggle) {
-    const card = toggle.closest('.card-form');
-    if (newSpotParts(card).block.hidden) {
-      openNewSpot(card);
-    } else {
-      closeNewSpot(card);
-    }
-  }
-});
-
-// プルダウンが変わったとき（手で選んだときも）
-document.getElementById('card-list').addEventListener('change', (e) => {
-  if (!e.target.matches('select[name$="-spot"]')) return;
-  const card = e.target.closest('.card-form');
-  if (e.target.value !== '') closeNewSpot(card);          // 既存のスポットを選んだら、新しい場所は閉じる
-  markSelectedCandidate(card);
-});
-
-// ==========================
-// 地名検索（位置情報の無いカード）
-// ==========================
-const searchUrl = logForm.dataset.searchUrl;
-
-// 住所から、見分けに使う部分だけを取り出す（先頭の名前と、末尾の「日本」は、除く）
-function shortAddress(place) {
-  const parts = (place.address || '').split(',').map((s) => s.trim()).filter(Boolean);
-  if (parts[0] === place.name) parts.shift();
-  if (parts[parts.length - 1] === '日本') parts.pop();
-  return parts.join('、');
+  card.dataset.lat = info.lat;
+  card.dataset.lng = info.lng;
+  await resolveFromPhoto(area, info.lat, info.lng, seq);
 }
 
-async function searchPlaces(card) {
-  const button = card.querySelector('.place-search-button');
-  const box = card.querySelector('.place-results');
-  const query = card.querySelector('.place-query').value.trim();
+// カード1枚の入力を、空に戻す
+function resetCard(card) {
+  delete card.dataset.lat;
+  delete card.dataset.lng;
+  const area = card.querySelector('.spot-area');
+  beginTask(area);
+  clearSpot(area);
+  card.querySelectorAll('input[type="file"], textarea, select').forEach((el) => {
+    el.value = '';
+  });
+  const preview = card.querySelector('.preview');
+  if (preview) {
+    URL.revokeObjectURL(preview.src);
+    preview.remove();
+  }
+  initSpotArea(area);
+}
+
+// 地名を検索する
+async function searchPlaces(area) {
+  const p = spotParts(area);
+  const button = area.querySelector('.place-search-button');
+  const query = p.query.value.trim();
   if (!query || button.disabled) return;
 
-  // 公開サーバーの利用ルール（1秒に1回まで）を守るため、押したあと1秒は、押せなくする
+  // 公開サーバーの利用ルール（1秒に1回まで）のため、押したあと1秒は、押せなくする
   button.disabled = true;
   setTimeout(() => { button.disabled = false; }, 1000);
 
-  const seq = String(++locationSeq);
-  card.dataset.searchSeq = seq;
-  box.innerHTML = '';
-  const note = document.createElement('p');
-  note.className = 'spot-candidates-note';
-  note.textContent = '検索中…';
-  box.append(note);
+  const seq = beginTask(area);
+  p.results.innerHTML = '';
+  p.results.append(makeNote('検索中…'));
 
   let data = { results: [], error: '検索できませんでした' };
   try {
@@ -778,27 +765,22 @@ async function searchPlaces(card) {
   } catch (err) {
     console.error('地名検索に失敗しました:', err);
   }
+  if (!isCurrent(area, seq)) return;
 
-  if (!card.isConnected || card.dataset.searchSeq !== seq) return;   // 古い検索の結果は、捨てる
-
-  box.innerHTML = '';
-  const message = document.createElement('p');
-  message.className = 'spot-candidates-note';
+  p.results.innerHTML = '';
   if (data.error) {
-    message.textContent = data.error;
+    p.results.append(makeNote(data.error));
   } else if (data.results.length === 0) {
-    message.textContent = '見つかりませんでした。住所や市区町村名など、別の言葉で検索してみてください';
+    p.results.append(makeNote('見つかりませんでした。住所や市区町村名など、別の言葉で検索してみてください'));
   } else {
-    message.textContent = '地点を選んでください';
+    p.results.append(makeNote('地点を選んでください'));
   }
-  box.append(message);
 
   data.results.forEach((place) => {
     const item = document.createElement('button');
     item.type = 'button';
     item.className = 'place-result';
     item.dataset.name = place.name;
-    item.dataset.detail = shortAddress(place);
     item.dataset.lat = place.lat;
     item.dataset.lng = place.lng;
 
@@ -807,53 +789,88 @@ async function searchPlaces(card) {
     nameLine.textContent = `🔎 ${place.name}`;
     item.append(nameLine);
 
-    if (item.dataset.detail) {
+    const detail = shortAddress(place);
+    if (detail) {
       const detailLine = document.createElement('span');
       detailLine.className = 'place-result-detail';
-      detailLine.textContent = item.dataset.detail;
+      detailLine.textContent = detail;
       item.append(detailLine);
     }
-    box.append(item);
+    p.results.append(item);
   });
 }
 
-// 検索ボタン・検索結果を押したとき
-document.getElementById('card-list').addEventListener('click', (e) => {
-  const searchButton = e.target.closest('.place-search-button');
-  if (searchButton) {
-    searchPlaces(searchButton.closest('.card-form'));
+// 住所から、見分けに使う部分だけを取り出す（先頭の名前と、末尾の「日本」は、除く）
+function shortAddress(place) {
+  const parts = (place.address || '').split(',').map((s) => s.trim()).filter(Boolean);
+  if (parts[0] === place.name) parts.shift();
+  if (parts[parts.length - 1] === '日本') parts.pop();
+  return parts.join('、');
+}
+
+// 検索結果を選んだとき：近くに登録済みのスポットがあれば、それを使う。無ければ、新しい場所にする
+async function adoptSearchResult(area, place) {
+  const p = spotParts(area);
+  const seq = beginTask(area);
+  p.results.innerHTML = '';
+  p.status.textContent = '📍 場所を確認しています…';
+
+  let nearest = null;
+  try {
+    const res = await fetch(`${nearbyUrl}?lat=${place.lat}&lng=${place.lng}`);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    nearest = (await res.json()).results[0] || null;
+  } catch (err) {
+    console.error('近くのスポットの確認に失敗しました:', err);
+  }
+  if (!isCurrent(area, seq)) return;
+
+  if (nearest) {
+    setDbSpot(area, nearest);
+  } else {
+    setNewSpot(area, place.name, place.lat, place.lng);
+  }
+}
+
+// ボタンを押したとき
+step2.addEventListener('click', (e) => {
+  const area = e.target.closest('.spot-area');
+  if (!area) return;
+
+  if (e.target.closest('.spot-change')) {          // 変更：地名で検索し直す
+    beginTask(area);
+    clearSpot(area);
+    showSearch(area, NOTE_CHANGE);
     return;
   }
-
+  if (e.target.closest('.place-search-button')) {
+    searchPlaces(area);
+    return;
+  }
   const result = e.target.closest('.place-result');
-  if (!result) return;
-  const card = result.closest('.card-form');
-
-  // 選んだ地点を、このカードの位置として扱う
-  card.dataset.lat = result.dataset.lat;
-  card.dataset.lng = result.dataset.lng;
-  card.dataset.locSource = 'search';
-  card.dataset.placeName = result.dataset.name;
-  card.dataset.searchSeq = '';                                 // 実行中の検索があれば、無効にする
-  spotSelectOf(card).value = '';
-  markSelectedCandidate(card);
-
-  const box = card.querySelector('.place-results');
-  box.innerHTML = '';
-  const chosen = document.createElement('p');
-  chosen.className = 'place-chosen';
-  chosen.textContent = result.dataset.detail
-    ? `選んだ地点：${result.dataset.name}（${result.dataset.detail}）`
-    : `選んだ地点：${result.dataset.name}`;
-  box.append(chosen);
-
-  loadCandidates(card);                                        // 近くの登録済みスポットを、探す
+  if (result) {
+    adoptSearchResult(area, {
+      name: result.dataset.name,
+      lat: result.dataset.lat,
+      lng: result.dataset.lng,
+    });
+  }
 });
 
 // 検索欄で Enter を押したときも、検索する（日本語の変換の確定は、除く）
-document.getElementById('card-list').addEventListener('keydown', (e) => {
+step2.addEventListener('keydown', (e) => {
   if (e.key !== 'Enter' || e.isComposing) return;
   if (!e.target.matches('.place-query')) return;
   e.preventDefault();
-  searchPlaces(e.target.closest('.card-form'));
+  searchPlaces(e.target.closest('.spot-area'));
 });
+
+// 新しい場所の名前を直したら、赤枠を消す
+step2.addEventListener('input', (e) => {
+  if (e.target.matches('[name$="-new_spot_name"]')) {
+    e.target.closest('.spot-area').classList.remove('invalid');
+  }
+});
+
+// 最初から表示されているカードを、準備する
+document.querySelectorAll('#card-list .spot-area').forEach(initSpotArea);
