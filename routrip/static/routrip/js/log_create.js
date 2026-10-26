@@ -670,7 +670,7 @@ function initSpotArea(area) {
   } else if (p.newName.value.trim() !== '' && p.newLat.value !== '' && p.newLng.value !== '') {
     showResolved(area, '', true);
   } else {
-    showSearch(area, NOTE_NO_PHOTO);
+    showSearch(area, area.dataset.note || NOTE_NO_PHOTO);
   }
 }
 
@@ -873,4 +873,4 @@ step2.addEventListener('input', (e) => {
 });
 
 // 最初から表示されているカードを、準備する
-document.querySelectorAll('#card-list .spot-area').forEach(initSpotArea);
+document.querySelectorAll('#step-2 .spot-area').forEach(initSpotArea);

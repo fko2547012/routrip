@@ -1,7 +1,7 @@
 from django import forms
 from django.forms import ModelForm
 from django.forms import inlineformset_factory
-from ..models import Log, Logcard
+from ..models import Log, Logcard, Spot
 import re
 
 
@@ -129,3 +129,32 @@ LogCardFormSet = inlineformset_factory(
     validate_min=True,
     can_delete=False,
 )
+
+class StartSpotForm(forms.Form):
+    '''
+    出発地のフォーム（カードのスポット欄と同じ仕組み）
+    '''
+    spot = forms.ModelChoiceField(
+        queryset=Spot.objects.all(), required=False, widget=forms.HiddenInput)
+    spot_label = forms.CharField(required=False, widget=forms.HiddenInput)
+    new_spot_name = forms.CharField(
+        required=False, max_length=30,
+        widget=forms.TextInput(attrs={'placeholder': '新しい場所の名前を入力'}))
+    new_spot_lat = forms.FloatField(
+        required=False, min_value=-90, max_value=90, widget=forms.HiddenInput)
+    new_spot_lng = forms.FloatField(
+        required=False, min_value=-180, max_value=180, widget=forms.HiddenInput)
+
+    def clean(self):
+        cleaned = super().clean()
+        name = (cleaned.get('new_spot_name') or '').strip()
+
+        if name:
+            if cleaned.get('new_spot_lat') is None or cleaned.get('new_spot_lng') is None:
+                self.add_error('new_spot_name', '位置情報を取得できませんでした。もう一度、検索してください')
+            else:
+                cleaned['new_spot_name'] = name
+                cleaned['spot'] = None
+        elif not cleaned.get('spot'):
+            self.add_error('spot', '出発地を入力してください')
+        return cleaned
