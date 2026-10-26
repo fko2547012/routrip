@@ -6,7 +6,7 @@ from django.db.models import Q
 from routrip.models import Log, Logcard, Spot
 from routrip.utils.geocode import search_places
 from routrip.utils.spot import find_nearby_spots
-
+from routrip.utils.geocode import reverse_place
 
 def _login_required_json(request):
     """
@@ -169,13 +169,10 @@ def suggest_spots(request):
 
     return JsonResponse({"results": results})
 
-def resolve_spot(request):
-    """
-    ログ作成用のスポット解決API（仮版）。
 
-    正式実装では、DB検索と座標からの逆引きを行う。
-    現段階では画面側の開発用に固定値を返す。
-    """
+def resolve_spot(request):
+    """座標に近い登録済みスポット、または逆引き結果を返す。"""
+
     if not request.user.is_authenticated:
         return JsonResponse(
             {"error": "ログインが必要です"},
@@ -188,14 +185,17 @@ def resolve_spot(request):
             status=405,
         )
 
+    # 緯度・経度を検証
     try:
         lat = float(request.GET["lat"])
         lng = float(request.GET["lng"])
 
-        if not math.isfinite(lat) or not math.isfinite(lng):
-            raise ValueError
-
-        if not -90 <= lat <= 90 or not -180 <= lng <= 180:
+        if (
+            not math.isfinite(lat)
+            or not math.isfinite(lng)
+            or not -90 <= lat <= 90
+            or not -180 <= lng <= 180
+        ):
             raise ValueError
 
     except (KeyError, TypeError, ValueError):
@@ -204,11 +204,44 @@ def resolve_spot(request):
             status=400,
         )
 
-    # 仮版：画面側の動作確認用の固定値
+    # 1. まずDBから100m以内のスポットを検索
+    nearby_spots = find_nearby_spots(lat, lng, radius_m=100)
+
+    # 最も近いスポットがあれば、外部サービスには問い合わせない
+    if nearby_spots:
+        spot, distance_m = nearby_spots[0]
+
+        return JsonResponse({
+            "source": "db",
+            "spot": {
+                "id": spot.pk,
+                "name": spot.name,
+                "lat": spot.latitude,
+                "lng": spot.longitude,
+                "distance_m": round(distance_m, 1),
+            },
+            "error": None,
+        })
+
+    # 2. DBに見つからない場合だけ逆引きする
+    result = reverse_place(lat, lng)
+    place = result.get("place")
+
+    if place is not None:
+        return JsonResponse({
+            "source": "reverse",
+            "spot": None,
+            "name": place["name"],
+            "address": place["address"],
+            "error": None,
+        })
+
+    # 3. DB検索も逆引きも失敗した場合
     return JsonResponse({
-        "source": "reverse",
+        "source": "none",
         "spot": None,
-        "name": "テスト地点",
-        "address": "テスト住所",
-        "error": None,
+        "name": "",
+        "address": "",
+        "error": result.get("error")
+        or "場所の名前を取得できませんでした",
     })
