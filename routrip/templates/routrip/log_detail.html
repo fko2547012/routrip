@@ -49,12 +49,7 @@
             <span>
                 移動手段: {{ item.section.transport }}
             </span>
-            <span>
-                {% if item.section.duration != None %}{{ item.section.duration }}分
-                {% else %}
-                    未設定
-                {% endif %}
-            </span>
+            <span>{{ item.section.duration_display }}</span>
         </div>
     {% endif %}
 

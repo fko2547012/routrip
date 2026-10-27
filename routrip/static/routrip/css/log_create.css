@@ -529,3 +529,31 @@
     font-size: 13px;
     color: var(--color-gray-text);
 }
+
+/* 移動時間と「分・時間」を横並びにする */
+.log-create .move {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+}
+
+.log-create .move > .field {
+    min-width: 0;
+}
+
+.log-create .duration-input {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.log-create .duration-input input {
+    flex: 1;
+    width: 0;
+    min-width: 0;
+    box-sizing: border-box;
+}
+
+.log-create .duration-input select {
+    flex: 0 0 76px;
+    width: 76px;
+    box-sizing: border-box;
+}

@@ -4,8 +4,16 @@
   <div class="move">
     <div class="field">
       {{ card_form.duration.errors }}
+      {{ card_form.duration_unit.errors }}
+      
+      <div class="duration-input">
       {{ card_form.duration }}
+      {% if card_form.duration_unit %}
+      {{ card_form.duration_unit }}
+      {% endif %}
     </div>
+    </div>
+
     <div class="field">
       {{ card_form.transport.errors }}
       {{ card_form.transport }}

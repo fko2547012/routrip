@@ -33,7 +33,7 @@ class LogDetailView(LoginRequiredMixin, DetailView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        log = self.get_object()
+        log = self.object
         
         #カードを表示順に取得
         cards = list(
@@ -48,6 +48,21 @@ class LogDetailView(LoginRequiredMixin, DetailView):
             .select_related('from_spot', 'to_spot')
             .order_by('section_order', 'id')
         )
+        
+        # 保存されている分を、表示用の「時間・分」に変換
+        for section in sections:
+            if section.duration is None:
+                section.duration_display = '未設定'
+            else:
+                hours, minutes = divmod(section.duration, 60)
+                
+                if hours and minutes:
+                    section.duration_display = f'{hours}時間{minutes}分'
+                elif hours:
+                    section.duration_display = f'{hours}時間'
+                else:
+                    section.duration_display = f'{minutes}分'
+
         
         #移動区間とその直後に表示するカードを組み合わせる
         context['timeline'] = [

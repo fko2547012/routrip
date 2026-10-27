@@ -62,12 +62,50 @@ class BaseEditCardFormSet(BaseInlineFormSet):
 
 
 class EditCardForm(LogCardFormSet.form):
-    def __init__(self,*args, **kwargs):
-        super().__init__(*args,**kwargs)
-        
-        self.fields['image_path'].widget=forms.FileInput(
-            attrs={'accept':'image/*'}
+    """
+    移動時間の単位を選択できる編集用フォーム。
+    """
+
+    duration_unit = forms.ChoiceField(
+        label="単位",
+        choices=[
+            ("minutes", "分"),
+            ("hours", "時間"),
+        ],
+        initial="minutes",
+        required=False,
+    )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        self.fields["image_path"].widget = forms.FileInput(
+            attrs={"accept": "image/*"}
         )
+
+        self.fields["duration"].label = "移動時間"
+        self.fields["duration"].widget.attrs["placeholder"] = "移動時間"
+
+    def clean(self):
+        cleaned = super().clean()
+
+        duration = cleaned.get("duration")
+        unit = cleaned.get("duration_unit") or "minutes"
+
+        if duration is not None:
+            # DBには分で保存する
+            if unit == "hours":
+                duration *= 60
+
+            if duration > 14400:
+                self.add_error(
+                    "duration",
+                    "移動時間は240時間以内で入力してください。",
+                )
+            else:
+                cleaned["duration"] = duration
+
+        return cleaned
 
 
 # 作成時と同じカードフォームを使用する, 編集では並び替えと削除を有効にする
@@ -144,8 +182,9 @@ class LogUpdateView(LoginRequiredMixin, UpdateView):
             kwargs["files"] = self.request.FILES
             
         formset = EditCardFormSet(**kwargs)
-
-        # 出発・到着スポットごとに移動区間をまとめる
+        """
+        出発・到着スポットごとに移動区間をまとめる
+        """
         sections = defaultdict(deque)
 
         for section in self.object.sections.order_by("section_order", "id"):
@@ -163,13 +202,21 @@ class LogUpdateView(LoginRequiredMixin, UpdateView):
                 if sections[key]
                 else None
             )
-
             if section:
                 card_form.initial["transport"] = section.transport
-                card_form.initial["duration"] = section.duration
-            
-            prev_spot_id=card.spot_id
-        return formset
+                duration = section.duration
+                if (
+                    duration is not None
+                    and duration > 0
+                    and duration % 60 == 0
+                ):
+                    card_form.initial["duration"] = duration // 60
+                    card_form.initial["duration_unit"] = "hours"
+                else:
+                    card_form.initial["duration"] = duration
+                    card_form.initial["duration_unit"] = "minutes"
+                    prev_spot_id = card.spot_id
+                    return formset
 
     def get_context_data(self, **kwargs):
         """
@@ -213,7 +260,6 @@ class LogUpdateView(LoginRequiredMixin, UpdateView):
         """
         self.object = self.get_object()
 
-        # 編集前に使用していたスポットを記録
         self.old_spot_ids = {self.object.start_spot_id}
 
         self.old_spot_ids.update(
