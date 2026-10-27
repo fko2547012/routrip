@@ -95,7 +95,7 @@
 
 /* ログカード */
 .log-detail .log-card {
-    margin: 0 0 8px;
+    margin: 0 auto 8px;
     padding: 0;
     overflow: hidden;
     background: #fff;

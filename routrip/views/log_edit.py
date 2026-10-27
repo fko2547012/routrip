@@ -83,6 +83,9 @@ class EditCardForm(LogCardFormSet.form):
             attrs={"accept": "image/*"}
         )
 
+        self.fields["spot"].widget = forms.Select(
+            choices=self.fields["spot"].choices
+        )
         self.fields["duration"].label = "移動時間"
         self.fields["duration"].widget.attrs["placeholder"] = "移動時間"
 
@@ -121,13 +124,25 @@ EditCardFormSet = inlineformset_factory(
 )
 
 
+class EditLogForm(LogForm):
+    """
+    編集画面に出発地の選択欄を表示する。
+    """
+    class Meta(LogForm.Meta):
+        fields = [
+            "title",
+            "trip_start_date",
+            "trip_end_date",
+            "start_spot",
+        ]
+        
+        
 class LogUpdateView(LoginRequiredMixin, UpdateView):
     """
-    ログ編集ビュー。
-    投稿者本人のログ・カード・移動区間・タグを更新する。
+    ログ編集ビュー
     """
     model = Log
-    form_class = LogForm
+    form_class = EditLogForm
     template_name = "routrip/log_edit.html"
     context_object_name = "log"
     login_url = "routrip:login"
@@ -214,8 +229,8 @@ class LogUpdateView(LoginRequiredMixin, UpdateView):
                 else:
                     card_form.initial["duration"] = duration
                     card_form.initial["duration_unit"] = "minutes"
-                prev_spot_id = card.spot_id
-            return formset
+            prev_spot_id = card.spot_id
+        return formset
 
     def get_context_data(self, **kwargs):
         """

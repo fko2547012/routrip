@@ -152,7 +152,7 @@ document.getElementById('add-card').addEventListener('click', () => {
     prepareCard(cardList.lastElementChild);
     renumberCards();
     updateRoutes();
-    nderThumbs();
+    renderThumbs();
     
     isChanged = true;
 });
