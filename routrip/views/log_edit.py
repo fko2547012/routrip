@@ -4,138 +4,13 @@ from django import forms
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db import transaction
-from django.forms import BaseInlineFormSet, inlineformset_factory
 from django.http import HttpResponseRedirect
 from django.urls import reverse
 from django.views.generic.edit import UpdateView
 
 from ..models import Log, Logcard, Tag, Section, Spot
-from ..forms.log import LogForm, LogCardFormSet
+from ..forms.log import EditLogForm, EditCardFormSet
 
-
-class BaseEditCardFormSet(BaseInlineFormSet):
-    """
-    カードの並び順と削除状態を管理する。
-    """
-    ordering_widget = forms.HiddenInput
-    deletion_widget = forms.HiddenInput
-
-    def clean(self):
-        super().clean()
-        if any(self.errors):
-            return
-
-        # 編集対象以外のカードが送信されていないか確認
-        expected_ids = set(
-            self.get_queryset().values_list("pk", flat=True)
-        )
-
-        submitted_ids = [
-            form.cleaned_data["id"].pk
-            for form in self.initial_forms
-            if form.cleaned_data.get("id")
-        ]
-
-        if (
-            len(submitted_ids) != len(expected_ids)
-            or set(submitted_ids) != expected_ids or any(form.cleaned_data.get("id")
-                for form in self.extra_forms
-            )
-        ):
-            raise forms.ValidationError("カード情報を確認できません。画面を開き直してください。")
-
-        # 削除しないカードの表示順を確認
-        orders = []
-        for form in self.forms:
-            if self._should_delete_form(form):
-                continue
-            if not form.instance.pk and not form.has_changed():
-                continue
-            
-            order = form.cleaned_data.get("ORDER")
-            if order is None or order < 1:
-                raise forms.ValidationError("カードの表示順を確認してください。")
-            
-            orders.append(order)
-            if len(orders) != len(set(orders)):
-                raise forms.ValidationError("カードの表示順が重複しています。")
-
-
-class EditCardForm(LogCardFormSet.form):
-    """
-    移動時間の単位を選択できる編集用フォーム。
-    """
-
-    duration_unit = forms.ChoiceField(
-        label="単位",
-        choices=[
-            ("minutes", "分"),
-            ("hours", "時間"),
-        ],
-        initial="minutes",
-        required=False,
-    )
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
-        self.fields["image_path"].widget = forms.FileInput(
-            attrs={"accept": "image/*"}
-        )
-
-        self.fields["spot"].widget = forms.Select(
-            choices=self.fields["spot"].choices
-        )
-        self.fields["duration"].label = "移動時間"
-        self.fields["duration"].widget.attrs["placeholder"] = "移動時間"
-
-    def clean(self):
-        cleaned = super().clean()
-
-        duration = cleaned.get("duration")
-        unit = cleaned.get("duration_unit") or "minutes"
-
-        if duration is not None:
-            # DBには分で保存する
-            if unit == "hours":
-                duration *= 60
-
-            if duration > 14400:
-                self.add_error(
-                    "duration",
-                    "移動時間は240時間以内で入力してください。",
-                )
-            else:
-                cleaned["duration"] = duration
-        return cleaned
-
-
-# 作成時と同じカードフォームを使用する, 編集では並び替えと削除を有効にする
-EditCardFormSet = inlineformset_factory(
-    Log,
-    Logcard,
-    form=EditCardForm,
-    formset=BaseEditCardFormSet,
-    extra=0,
-    min_num=1,
-    validate_min=True,
-    can_order=True,
-    can_delete=True,
-)
-
-
-class EditLogForm(LogForm):
-    """
-    編集画面に出発地の選択欄を表示する。
-    """
-    class Meta(LogForm.Meta):
-        fields = [
-            "title",
-            "trip_start_date",
-            "trip_end_date",
-            "start_spot",
-        ]
-        
         
 class LogUpdateView(LoginRequiredMixin, UpdateView):
     """
@@ -177,7 +52,7 @@ class LogUpdateView(LoginRequiredMixin, UpdateView):
                 format="%Y-%m-%d",
                 attrs={"type": "date"},
             )
-            return form
+        return form
         
     def get_formset(self):
         """
@@ -335,9 +210,10 @@ class LogUpdateView(LoginRequiredMixin, UpdateView):
                 card.taken_at = None
                 card.latitude = None
                 card.longitude = None
-                card.save()
-                card_form.save_m2m()
-                saved_cards[card_form.prefix] = card
+                
+            card.save()
+            card_form.save_m2m()
+            saved_cards[card_form.prefix] = card
 
             # カードの手前の移動区間を保存
             Section.objects.create(
