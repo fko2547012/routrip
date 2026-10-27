@@ -104,7 +104,6 @@ class EditCardForm(LogCardFormSet.form):
                 )
             else:
                 cleaned["duration"] = duration
-
         return cleaned
 
 
@@ -215,8 +214,8 @@ class LogUpdateView(LoginRequiredMixin, UpdateView):
                 else:
                     card_form.initial["duration"] = duration
                     card_form.initial["duration_unit"] = "minutes"
-                    prev_spot_id = card.spot_id
-                    return formset
+                prev_spot_id = card.spot_id
+            return formset
 
     def get_context_data(self, **kwargs):
         """
