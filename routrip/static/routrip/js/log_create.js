@@ -874,3 +874,25 @@ step2.addEventListener('input', (e) => {
 
 // 最初から表示されているカードを、準備する
 document.querySelectorAll('#step-2 .spot-area').forEach(initSpotArea);
+
+// ==========================
+// カードの並び替え（▲▼）
+// ==========================
+document.getElementById('card-list').addEventListener('click', (e) => {
+  const up = e.target.closest('.move-up');
+  const down = e.target.closest('.move-down');
+  if (!up && !down) return;
+
+  const card = e.target.closest('.card-form');
+  if (up) {
+    const prev = card.previousElementSibling;
+    if (prev) prev.before(card);
+  } else {
+    const next = card.nextElementSibling;
+    if (next) next.after(card);
+  }
+
+  renumberCards();       // フォームの番号を、並び順に合わせ直す
+  renderThumbs();        // サムネイルの一覧も、作り直す
+  card.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+});

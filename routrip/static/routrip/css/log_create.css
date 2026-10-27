@@ -172,6 +172,35 @@
     display: none;
 }
 
+.log-create .card-title {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.log-create .card-order-buttons {
+    display: flex;
+    gap: 6px;
+}
+
+.log-create .move-up,
+.log-create .move-down {
+    width: 40px;
+    height: 40px;
+    padding: 0;
+    background-color: var(--color-lavender);
+    border: 1px solid #d5e3f3;
+    color: var(--color-navy);
+    font-size: 14px;
+    line-height: 1;
+}
+
+/* 先頭は「上へ」、末尾は「下へ」を、見えなくする（場所は残す） */
+.log-create #card-list > .card-form:first-child .move-up,
+.log-create #card-list > .card-form:last-child .move-down {
+    visibility: hidden;
+}
+
 /* ==========================
    ログ作成：スポット
 ========================== */
