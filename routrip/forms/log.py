@@ -16,7 +16,7 @@ class LogForm(ModelForm):
 
     class Meta:
         model = Log
-        fields = ['title', 'trip_start_date', 'trip_end_date', 'start_spot']
+        fields = ['title', 'trip_start_date', 'trip_end_date']
         widgets = {
             'title': forms.TextInput(attrs={'placeholder': 'タイトル入力'}),
             'trip_start_date': forms.DateInput(attrs={'type': 'date'}),

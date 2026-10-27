@@ -50,9 +50,9 @@
 
     <div class="start-box">
       <p class="start-label">出発地</p>
-      <div class="field">
-        {{ form.start_spot.errors }}
-        <label class="pin-row"><span>📍</span>{{ form.start_spot }}</label>
+      {% for hidden in start_form.hidden_fields %}{{ hidden }}{% endfor %}
+      <div class="field spot-area" data-note="出発地を地名で検索してください">
+        {% include 'routrip/_spot_field.html' with spot_form=start_form %}
       </div>
     </div>
 

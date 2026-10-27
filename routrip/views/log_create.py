@@ -5,7 +5,7 @@ from django.shortcuts import render, redirect
 from django.urls import reverse_lazy
 
 from ..models import Log, Tag, Section, Spot
-from ..forms.log import LogForm, LogCardFormSet
+from ..forms.log import LogForm, LogCardFormSet, StartSpotForm
 from ..utils.photo import get_photo_info
 from ..utils.spot import haversine_m
 
@@ -24,11 +24,12 @@ class LogCreateView(LoginRequiredMixin, CreateView):
         カードのフォームセットを画面に表示するコンテキスト
         """
         context = super().get_context_data(**kwargs)
-        if self.request.POST:
-            context['formset'] = LogCardFormSet(
-                self.request.POST, self.request.FILES)
+        if self.request.method == 'POST':
+            context['formset'] = LogCardFormSet(self.request.POST, self.request.FILES)
+            context['start_form'] = StartSpotForm(self.request.POST, prefix='start')
         else:
             context['formset'] = LogCardFormSet()
+            context['start_form'] = StartSpotForm(prefix='start')
         return context
 
     def form_valid(self, form):
@@ -36,11 +37,16 @@ class LogCreateView(LoginRequiredMixin, CreateView):
         formの入力値をチェックして、ログとタグを保存する
         """
         formset = LogCardFormSet(self.request.POST, self.request.FILES)
-        if not formset.is_valid():
-            return self.form_invalid(form)  #ログの入力画面を再表示する
+        start_form = StartSpotForm(self.request.POST, prefix='start')
+        cards_ok = formset.is_valid()
+        start_ok = start_form.is_valid()        # どちらも確認する（片方だけだと、エラーが片方しか出ない）
+        if not (cards_ok and start_ok):
+            return self.form_invalid(form)
 
-        form.instance.user = self.request.user 
-        response = super().form_valid(form) #ログを保存
+        new_spots = []                           # この投稿で作る新しいスポット（出発地・カード共通）
+        form.instance.user = self.request.user
+        form.instance.start_spot = self.resolve_spot(start_form.cleaned_data, new_spots)
+        response = super().form_valid(form)      # ログを保存
 
         for name in form.cleaned_data['tag_text']:
             tag, _ = Tag.objects.get_or_create(name=name)   #タグを取得または作成
@@ -110,6 +116,16 @@ class LogCreateView(LoginRequiredMixin, CreateView):
             registered_user=self.request.user)
         created.append(spot)
         return spot
+
+    def resolve_spot(self, data, created):
+        """
+        フォームの入力から、スポットを決める。
+        新しい場所なら作り、登録済みなら、そのスポットを返す。
+        """
+        if data.get('new_spot_name'):
+            return self.get_new_spot(
+                data['new_spot_name'], data['new_spot_lat'], data['new_spot_lng'], created)
+        return data['spot']
 
 class LogImageSelectView(LoginRequiredMixin, View):
     """
