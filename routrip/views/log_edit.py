@@ -8,7 +8,7 @@ from django.http import HttpResponseRedirect
 from django.urls import reverse
 from django.views.generic.edit import UpdateView
 
-from ..models import Log, Logcard, Tag, Section, Spot
+from ..models import Log, Tag, Section, Spot
 from ..forms.log import EditLogForm, EditCardFormSet
 
         
@@ -115,21 +115,16 @@ class LogUpdateView(LoginRequiredMixin, UpdateView):
         if "formset" not in context:
             context["formset"] = self.get_formset()
             
-            saved_cards = {
-            card.pk: card
-            for card in self.object.cards.all()
-        }
-            
             images = {}
             thumbnail = ""
             
             for card_form in context["formset"].initial_forms:
-                card = saved_cards.get(card_form.instance.pk)
+                card = card_form.instance
                 
-                if card and card.image_path:
+                if card.image_path:
                     images[card_form.prefix] = card.image_path.url
                     
-                    if card and card.pk == self.object.thumbnail_card_id:
+                    if card.pk == self.object.thumbnail_card_id:
                         thumbnail = card_form.prefix
 
         context["card_images"] = images
@@ -148,18 +143,9 @@ class LogUpdateView(LoginRequiredMixin, UpdateView):
         ログとカードを検証して、まとめて更新する。
         """
         self.object = self.get_object()
-
-        self.old_spot_ids = {self.object.start_spot_id}
-
-        self.old_spot_ids.update(
-            self.object.cards.values_list("spot_id", flat=True)
-        )
-
-        for from_id, to_id in self.object.sections.values_list("from_spot_id", "to_spot_id"):
-            self.old_spot_ids.update((from_id, to_id))
-
-        form = self.get_form()
-        self.formset = self.get_formset()
+        
+        form=self.get_form()
+        self.formset=self.get_formset()
 
         form_valid = form.is_valid()
         formset_valid = self.formset.is_valid()
@@ -195,6 +181,7 @@ class LogUpdateView(LoginRequiredMixin, UpdateView):
 
         prev_spot = self.object.start_spot
         saved_cards = {}
+        new_spots=[]
 
         # 変更していない既存カードも含めて保存する
         for order, card_form in enumerate(
@@ -204,28 +191,51 @@ class LogUpdateView(LoginRequiredMixin, UpdateView):
             card = card_form.save(commit=False)
             card.log = self.object
             card.display_order = order
-
-            # 写真を変更した場合、古い撮影情報を消す
-            if "image_path" in card_form.changed_data:
+            
+        # 新しいスポットを登録
+        new_name = card_form.cleaned_data.get(
+            "new_spot_name"
+        )
+        if new_name:
+            card.spot = self.get_new_spot(
+                new_name,
+                card_form.cleaned_data["new_spot_lat"],
+                card_form.cleaned_data["new_spot_lng"],
+                new_spots,
+            )
+        
+        # 写真変更時はEXIF情報を更新
+        if "image_path" in card_form.changed_data:
+            photo = card_form.cleaned_data.get(
+                "image_path"
+            )
+            if photo:
+                info = get_photo_info(photo)
+                card.taken_at = info["taken_at"]
+                card.latitude = info["lat"]
+                card.longitude = info["lng"]
+            else:
                 card.taken_at = None
                 card.latitude = None
                 card.longitude = None
-                
-            card.save()
-            card_form.save_m2m()
-            saved_cards[card_form.prefix] = card
 
-            # カードの手前の移動区間を保存
-            Section.objects.create(
-                log=self.object,
-                from_spot=prev_spot,
-                to_spot=card.spot,
-                section_order=order,
-                transport=card_form.cleaned_data["transport"],
-                duration=card_form.cleaned_data["duration"],
-            )
+        # カードを保存
+        card.save()
+        card_form.save_m2m()
+
+        saved_cards[card_form.prefix] = card
+
+        # カードの手前の移動区間を保存
+        Section.objects.create(
+            log=self.object,
+            from_spot=prev_spot,
+            to_spot=card.spot,
+            section_order=order,
+            transport=card_form.cleaned_data["transport"],
+            duration=card_form.cleaned_data["duration"],
+        )
             
-            prev_spot = card.spot
+        prev_spot = card.spot
 
         # タグを現在の入力内容に置き換える
         tags = []
@@ -249,18 +259,44 @@ class LogUpdateView(LoginRequiredMixin, UpdateView):
 
         self.object.thumbnail_card = thumb_card
         self.object.save(update_fields=["thumbnail_card"])
+        
+        messages.success(
+            self.request,
+            "ログを更新しました。"
+        )
 
-        # どこからも参照されていないものだけ削除する
-        Spot.objects.filter(
-            pk__in=self.old_spot_ids,
-            start_logs__isnull=True,
-            log_cards__isnull=True,
-            departing_sections__isnull=True,
-            arriving_sections__isnull=True,
-        ).delete()
+        return HttpResponseRedirect(
+            self.get_success_url()
+        )
+        
+    def get_new_spot(self, name, lat, lng, created):
+        """
+        新しいスポットを作る。
+        同じ投稿内で名前が同じかつ100m以内なら再利用する。
+        """
+        for spot in created:
+            if (
+                spot.name == name
+                and haversine_m(
+                    spot.latitude,
+                    spot.longitude,
+                    lat,
+                    lng
+                ) <= 100
+            ):
+                return spot
 
-        messages.success(self.request, "ログを更新しました。")
-        return HttpResponseRedirect(self.get_success_url())
+        spot = Spot.objects.create(
+            name=name,
+            latitude=lat,
+            longitude=lng,
+            registered_user=self.request.user,
+        )
+
+        created.append(spot)
+
+        return spot
+
 
     def get_success_url(self):
         """
