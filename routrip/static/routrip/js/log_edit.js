@@ -83,21 +83,16 @@ img.src = src;
 // カードの初期設定
 function prepareCard(card) {
     card.dataset.prefix = cardField(card, 'ORDER').name
-    .replace(/-ORDER$/, '');
-    const deleted = cardField(card, 'DELETE').value.toLowerCase();
+        .replace(/-ORDER$/, '');
+
+    const deleteField = cardField(card, 'DELETE');
+
+    const deleted = deleteField
+        ? deleteField.value.toLowerCase()
+        : '';
+
     card.hidden = ['on', 'true', '1'].includes(deleted);
 
-  // 並び替えボタンを追加
-    const controls = document.createElement('div');
-    
-    [['up', '↑ 上へ'],['down', '↓ 下へ'],].forEach(([action, text]) => {
-        const button = document.createElement('button');
-        button.type = 'button';
-        button.dataset.action = action;
-        button.textContent = text;
-        controls.append(button);
-    });
-    card.querySelector('.card-box').append(controls);
     renderPhoto(card);
 }
 
@@ -111,7 +106,7 @@ function renumberCards() {
 
 // 区間が変わったら、移動手段・時間を未設定にする
 function updateRoutes(reset = true) {
-    let from = document.getElementById('id_start_spot').value;
+    let from = document.getElementById('id_start-spot').value;
     activeCards().forEach((card) => {
     const to = cardField(card, 'spot').value;
     const route = JSON.stringify([from, to]);
@@ -179,37 +174,44 @@ if (e.target.name.endsWith('-spot')) {
 cardList.addEventListener('click', (e) => {
     const button = e.target.closest('button');
     if (!button) return;
+
     const card = button.closest('.card-form');
     if (!card) return;
-    
+
     if (button.classList.contains('remove-card')) {
-    // カードを消さず、削除フラグを付けて送信する
-    cardField(card, 'DELETE').value = 'on';
-    card.hidden = true;
-} else {
-    const cards = activeCards();
-    const index = cards.indexOf(card);
-    
-    if (button.dataset.action === 'up' && index > 0) {
-        cardList.insertBefore(card, cards[index - 1]);
-    } else if (
-        button.dataset.action === 'down' &&
-        index < cards.length - 1
-    ) {
-        cards[index + 1].after(card);
+        const deleteField = cardField(card, 'DELETE');
+
+        if (deleteField) {
+            deleteField.value = 'on';
+            card.hidden = true;
+        } else {
+            card.remove();
+        }
+
     } else {
-        return;
+        const cards = activeCards();
+        const index = cards.indexOf(card);
+        
+        if (button.classList.contains('move-up') && index > 0) {
+            cardList.insertBefore(card, cards[index - 1]);
+        } else if (
+            button.classList.contains('move-down') &&
+            index < cards.length - 1
+        ) {
+            cards[index + 1].after(card);
+        } else {
+            return;
+        }
     }
-}
-renumberCards();
-updateRoutes();
-renderThumbs();
 
-isChanged = true;
+    renumberCards();
+    updateRoutes();
+    renderThumbs();
+
+    isChanged = true;
 });
-
 // 出発地が変更されたとき
-document.getElementById('id_start_spot')
+document.getElementById('id_start-spot')
 .addEventListener('change', () => updateRoutes());
 
 

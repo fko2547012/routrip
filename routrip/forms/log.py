@@ -160,7 +160,7 @@ class StartSpotForm(forms.Form):
             self.add_error('spot', '出発地を入力してください')
         return cleaned
     
-class EditCardForm(LogCardFormSet.form):
+class EditCardForm(LogCardForm):
     """
     移動時間の単位を選択できる編集用フォーム。
     """
@@ -182,9 +182,8 @@ class EditCardForm(LogCardFormSet.form):
             attrs={"accept": "image/*"}
         )
 
-        self.fields["spot"].widget = forms.Select(
-            choices=self.fields["spot"].choices
-        )
+        self.fields["spot"].widget = forms.HiddenInput()
+        
         self.fields["duration"].label = "移動時間"
         self.fields["duration"].widget.attrs["placeholder"] = "移動時間"
 
