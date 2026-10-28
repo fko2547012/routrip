@@ -345,6 +345,23 @@
 }
 
 /* ==========================
+   ログ作成：移動時間
+========================== */
+.log-create .duration-input {
+    display: flex;
+    gap: 6px;
+}
+
+.log-create .duration-input input {
+    flex: 1;
+    min-width: 0;
+}
+
+.log-create .duration-input select {
+    width: auto;        /* 全体の select { width: 100% } を、打ち消す */
+}
+
+/* ==========================
    ログ作成：タグ
 ========================== */
 #tag-chips {

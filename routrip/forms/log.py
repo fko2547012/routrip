@@ -69,12 +69,11 @@ class LogCardForm(ModelForm):
         choices=[('', '選択してください')] + TRANSPORT_CHOICES,
         error_messages={'required': '移動手段を選択してください'})
     duration = forms.IntegerField(
-        label='移動時間（分）',
+        label='移動時間',
         required=False,
         min_value=1,
-        max_value=14400,      
         widget=forms.NumberInput(attrs={
-            'placeholder': '移動時間（分）',
+            'placeholder': '移動時間',
             'inputmode': 'numeric',    # スマホで数字のキーボードを出す
         }),
         error_messages={
@@ -82,6 +81,13 @@ class LogCardForm(ModelForm):
             'min_value': '移動時間は1分以上で入力してください',
             'max_value': '移動時間が長すぎます',
         })
+    duration_unit = forms.ChoiceField(
+        label='単位',
+        choices=[('minutes', '分'), ('hours', '時間')],
+        initial='minutes',
+        required=False,
+    )
+    MAX_DURATION_MINUTES = 14400  # 240時間
 
     new_spot_name = forms.CharField(
         required=False, max_length=30,      # Spot.name の max_length に合わせる
@@ -94,13 +100,39 @@ class LogCardForm(ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields['spot'].required = False     # 新しい場所のときは、空でもよい
-        if self.instance.pk and self.instance.spot_id:
-            self.initial.setdefault('spot_label', self.instance.spot.name)
+        
+        if self.instance.pk:
+            if self.instance.spot_id:
+                self.initial.setdefault('spot_label', self.instance.spot.name)
+
+    def set_duration_initial(self, minutes):
+        '''
+        分で渡された移動時間を、画面用の初期値に直す（60で割り切れれば、時間で表示）。
+        編集のとき、手前の移動区間（Section）から取った値を渡すために使う。
+        '''
+        if minutes and minutes % 60 == 0:
+            self.initial['duration'] = minutes // 60
+            self.initial['duration_unit'] = 'hours'
+        else:
+            self.initial['duration'] = minutes
+            self.initial['duration_unit'] = 'minutes'
 
     def clean(self):
         cleaned = super().clean()
-        name = (cleaned.get('new_spot_name') or '').strip()
 
+        #移動時間の単位を分に
+        duration = cleaned.get('duration')
+        unit = cleaned.get('duration_unit') or 'minutes'
+        if duration is not None:
+            if unit == 'hours':
+                duration *= 60
+            if duration > self.MAX_DURATION_MINUTES:
+                self.add_error('duration', '移動時間は240時間以内で入力してください')
+            else:
+                cleaned['duration'] = duration
+
+        #スポット処理
+        name = (cleaned.get('new_spot_name') or '').strip()
         if name:
             if cleaned.get('new_spot_lat') is None or cleaned.get('new_spot_lng') is None:
                 self.add_error('new_spot_name', '位置情報を取得できませんでした。既存のスポットを選んでください')
@@ -111,7 +143,7 @@ class LogCardForm(ModelForm):
             self.add_error('spot', 'スポットを入力してください')
         return cleaned
 
-    field_order = ['transport', 'duration', 'spot', 'image_path', 'comment']
+    field_order = ['transport', 'duration', 'duration_unit', 'spot', 'image_path', 'comment']
     spot_label = forms.CharField(required=False, widget=forms.HiddenInput)
 
     class Meta:

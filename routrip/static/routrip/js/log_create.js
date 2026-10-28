@@ -402,23 +402,6 @@ picker.addEventListener('change', () => {
   })();
 });
 
-// カード1枚分の入力を、空に戻す
-function resetCard(card) {
-  delete card.dataset.lat;
-  delete card.dataset.lng;
-  delete card.dataset.locSource;
-  delete card.dataset.placeName;
-  card.querySelector('.spot-candidates').innerHTML = '';
-  card.querySelectorAll('input[type="file"], textarea, select').forEach((el) => {
-    el.value = '';
-  });
-  const preview = card.querySelector('.preview');
-  if (preview) {
-    URL.revokeObjectURL(preview.src);
-    preview.remove();
-  }
-}
-
 // カードの写真の欄に、1枚の写真を入れる
 function setFile(card, file) {
   const input = card.querySelector('input[type="file"]');
@@ -734,6 +717,9 @@ function resetCard(card) {
   card.querySelectorAll('input[type="file"], textarea, select').forEach((el) => {
     el.value = '';
   });
+  card.querySelectorAll('select').forEach((el) => {
+  el.selectedIndex = 0;       // 先頭の選択肢に戻す（移動手段は「選択してください」、単位は「分」）
+});
   const preview = card.querySelector('.preview');
   if (preview) {
     URL.revokeObjectURL(preview.src);

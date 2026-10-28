@@ -8,9 +8,7 @@
       
       <div class="duration-input">
       {{ card_form.duration }}
-      {% if card_form.duration_unit %}
       {{ card_form.duration_unit }}
-      {% endif %}
     </div>
     </div>
 
@@ -41,7 +39,7 @@
     </div>
 
     <div class="card-spot field spot-area">
-      {% if card_form.duration_unit %}
+      {% if is_edit %}
         {{ card_form.spot.errors }}
         
         <label class="pin-row">
