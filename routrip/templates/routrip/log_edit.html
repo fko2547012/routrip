@@ -62,14 +62,14 @@
 
     <div id="card-list">
     {% for card_form in formset %}
-        {% include 'routrip/_card_form.html' %}
+        {% include 'routrip/_card_form.html' with is_edit=True %}
     {% endfor %}
     </div>
 
     <button type="button" id="add-card">カードを追加</button>
 
     <template id="card-template">
-        {% include 'routrip/_card_form.html' with card_form=formset.empty_form %}
+        {% include 'routrip/_card_form.html' with card_form=formset.empty_form is_edit=True %}
     </template>
 
     {% if form.errors or formset.total_error_count %}
