@@ -94,6 +94,8 @@ class LogCardForm(ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields['spot'].required = False     # 新しい場所のときは、空でもよい
+        if self.instance.pk and self.instance.spot_id:
+            self.initial.setdefault('spot_label', self.instance.spot.name)
 
     def clean(self):
         cleaned = super().clean()
@@ -115,7 +117,10 @@ class LogCardForm(ModelForm):
     class Meta:
         model = Logcard
         fields = ['spot', 'image_path', 'comment']
-        widgets = {'spot': forms.HiddenInput}   # 画面に戻すときの、表示用の名前
+        widgets = {
+            'spot': forms.HiddenInput,
+            'image_path': forms.FileInput(attrs={'accept': 'image/*'}),
+        }
         error_messages = {
             'spot': {'required': 'スポットを入力してください'},
             'comment': {'required': 'コメントを入力してください'},
