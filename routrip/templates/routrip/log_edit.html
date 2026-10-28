@@ -2,12 +2,21 @@
 {% load static %}
 
 {% block extra_css %}
-    <link rel="stylesheet" href="{% static 'routrip/css/log_create.css' %}">
+    <link rel="stylesheet"
+    href="{% static 'routrip/css/log_create.css' %}">
 {% endblock %}
-
 {% block content %}
-    <form class="log-create" method="post" enctype="multipart/form-data" novalidate id="log-edit-form">
-{% csrf_token %}
+
+<form class="log-create"
+    method="post"
+    enctype="multipart/form-data"
+    novalidate
+    id="log-edit-form"
+    data-nearby-url="{% url 'routrip:nearby_spots' %}"
+    data-search-url="{% url 'routrip:search_spots' %}"
+    data-resolve-url="{% url 'routrip:resolve_spots' %}">
+
+    {% csrf_token %}
 
 {# ===== 画面2：登録済みの内容を編集 ===== #}
 <div class="step is-active" id="edit-step-2">
@@ -38,13 +47,13 @@
     <div class="start-box">
     <p class="start-label">出発地</p>
 
-    <div class="field">
-        {{ form.start_spot.errors }}
+    {% for hidden in start_form.hidden_fields %}
+        {{ hidden }}
+    {% endfor %}
 
-        <label class="pin-row">
-        <span>📍</span>
-        {{ form.start_spot }}
-        </label>
+    <div class="field spot-area">
+        {% include 'routrip/_spot_field.html' with spot_form=start_form %}
+
     </div>
 </div>
 

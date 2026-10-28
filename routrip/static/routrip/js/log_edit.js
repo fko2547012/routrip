@@ -100,7 +100,7 @@ function prepareCard(card) {
 function renumberCards() {
     activeCards().forEach((card, i) => {
         cardField(card, 'ORDER').value = i + 1;
-        card.querySelector('.card-title').textContent = `カード ${i + 1}`;
+        card.querySelector('.card-number').textContent = `カード ${i + 1}`;
     });
 }
 

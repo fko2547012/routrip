@@ -1,6 +1,6 @@
 from django import forms
 from django.forms import inlineformset_factory
-from routrip.forms.log import LogCardFormSet, LogForm
+from routrip.forms.log import LogCardFormSet
 from ..models import Log, Logcard
 from django.forms import BaseInlineFormSet
 
@@ -22,9 +22,6 @@ class EditCardForm(LogCardFormSet.form):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        self.fields["image_path"].widget = forms.FileInput(
-            attrs={"accept": "image/*"}
-        )
 
         self.fields["spot"].widget = forms.HiddenInput()
         self.fields["duration"].label = "移動時間"
@@ -99,16 +96,3 @@ EditCardFormSet = inlineformset_factory(
     can_order=True,
     can_delete=True,
 )
-
-
-class EditLogForm(LogForm):
-    """
-    編集用ログフォーム
-    """
-    class Meta(LogForm.Meta):
-        fields = [
-            "title",
-            "trip_start_date",
-            "trip_end_date",
-        ]
-        

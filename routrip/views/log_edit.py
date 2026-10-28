@@ -11,8 +11,8 @@ from django.views.generic.edit import UpdateView
 from ..utils.photo import get_photo_info
 from ..utils.spot import haversine_m
 from ..models import Log, Tag, Section, Spot
-from ..forms.log_edit import EditLogForm, EditCardFormSet
-from ..forms.log import StartSpotForm
+from ..forms.log_edit import EditCardFormSet
+from ..forms.log import LogForm, StartSpotForm
 
         
 class LogUpdateView(LoginRequiredMixin, UpdateView):
@@ -20,7 +20,7 @@ class LogUpdateView(LoginRequiredMixin, UpdateView):
     ログ編集ビュー
     """
     model = Log
-    form_class = EditLogForm
+    form_class = LogForm
     template_name = "routrip/log_edit.html"
     context_object_name = "log"
     login_url = "routrip:login" 
@@ -163,6 +163,11 @@ class LogUpdateView(LoginRequiredMixin, UpdateView):
         
         form=self.get_form()
         self.formset=self.get_formset()
+        
+        self.start_form=StartSpotForm(
+            request.POST,
+            prefix='start',
+        )
 
         form_valid = form.is_valid()
         formset_valid = self.formset.is_valid()
