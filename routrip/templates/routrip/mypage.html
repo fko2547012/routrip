@@ -1,5 +1,10 @@
 {% extends 'routrip/base.html' %}
 
+{% load static %}
+{% block extra_css %}
+  <link rel="stylesheet" href="{% static 'routrip/css/toppage.css' %}">
+{% endblock %}
+
 {% block content %}
     <h2>マイページ</h2>
     {# ユーザー名変更 #}
@@ -37,26 +42,41 @@
     <hr>
 
     {# マイログ #}
-    {% for log in mylog %}
-    <div class="log-card">
-        <a href="{% url 'routrip:log_detail' log.pk %}" class="log-card-link">
-            <div class="log-card-inner">
-                {% if log.thumbnail_card and log.thumbnail_card.image_path %}
-                    <div class="log-thumbnail-wrapper">
-                        <img src="{{ log.thumbnail_card.image_path.url }}" alt="{{ log.title }}" class="log-thumbnail">
-                    </div>
-                {% else %}
-                    {# 画像がない場合 #}
-                    <div class="log-thumbnail-wrapper no-image">
-                        <span>No Image</span>
-                    </div>
-                {% endif %}
-                <span class="log-title">{{ log.title  }}</span>
-            </div>
-        </a> 
-    </div>
+    <div class="log-list-container">
+        {% for log in mylog %}
+        <div class="log-card">
+            <a href="{% url 'routrip:log_detail' log.pk %}" class="log-card-link">
+                <div class="log-card-inner">
+                    {% if log.thumbnail_card and log.thumbnail_card.image_path %}
+                        <div class="log-thumbnail-wrapper">
+                            <img src="{{ log.thumbnail_card.image_path.url }}" alt="{{ log.title }}" class="log-thumbnail">
+                        </div>
+                    {% else %}
+                        {# 画像がない場合 #}
+                        <div class="log-thumbnail-wrapper no-image">
+                            <span>No Image</span>
+                        </div>
+                    {% endif %}
 
-    {% empty %}
-        <p>投稿したログがありません。</p>
-    {% endfor %}
+                    <div class="log-info"> 
+                        <span class="log-title">{{ log.title  }}</span>
+                        {% if log.tags.all %}
+                            <div class="log-tags">
+                                {% for tag in log.tags.all %}
+                                    <span class="log-tag-badge">#{{ tag.name }}</span>
+                                {% endfor %}
+                            </div>
+                        {% endif %}            
+                    </div>
+                </div>
+                <div class="log-date">
+                    {{ log.posted_at|date:"Y.m.d"}}
+                </div>
+            </a> 
+        </div>
+
+        {% empty %}
+            <p>投稿したログがありません。</p>
+        {% endfor %}
+    </div>
 {% endblock %}
