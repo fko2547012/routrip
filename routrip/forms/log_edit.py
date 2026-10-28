@@ -26,9 +26,7 @@ class EditCardForm(LogCardFormSet.form):
             attrs={"accept": "image/*"}
         )
 
-        self.fields["spot"].widget = forms.Select(
-            choices=self.fields["spot"].choices
-        )
+        self.fields["spot"].widget = forms.HiddenInput()
         self.fields["duration"].label = "移動時間"
         self.fields["duration"].widget.attrs["placeholder"] = "移動時間"
 
@@ -105,13 +103,12 @@ EditCardFormSet = inlineformset_factory(
 
 class EditLogForm(LogForm):
     """
-    編集画面に出発地の選択欄を表示する。
+    編集用ログフォーム
     """
     class Meta(LogForm.Meta):
         fields = [
             "title",
             "trip_start_date",
             "trip_end_date",
-            "start_spot",
         ]
         
