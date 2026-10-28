@@ -1,12 +1,19 @@
 {% extends 'routrip/base.html' %}
 
+{% load static %}
+{% block extra_css %}
+  <link rel="stylesheet" href="{% static 'routrip/css/mypage.css' %}">
+{% endblock %}
+
 {% block content %}
-    {{ log.title }}
-    <hr>
-    <p>本当に削除しますか？</p>
-    <form method="post">
-    {% csrf_token %}
-        <a href="{% url 'routrip:log_detail' log.pk %}">キャンセル</a>
-        <button type="submit">削除</button>
-    </form>
+    <div class="delete-container">
+        <h2>{{ log.title }}</h2>
+        <hr>
+        <p>本当に削除しますか？</p>
+        <form method="post"  class="delete-form">
+        {% csrf_token %}
+            <a href="{% url 'routrip:log_detail' log.pk %}" class="cancel-btn">キャンセル</a>
+            <button type="submit" class="delete-btn">削除</button>
+        </form>
+    </div>
 {% endblock %}

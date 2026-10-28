@@ -2,13 +2,13 @@
 
 {% load static %}
 {% block extra_css %}
-  <link rel="stylesheet" href="{% static 'routrip/css/toppage.css' %}">
+  <link rel="stylesheet" href="{% static 'routrip/css/mypage.css' %}">
 {% endblock %}
 
 {% block content %}
     <h2>マイページ</h2>
     {# ユーザー名変更 #}
-    <div>
+    <div class="profile-section">
         {% if editing %}
             <form method="post">
                 {% csrf_token %}
@@ -16,26 +16,25 @@
                 {% if name_error %}
                     <p>{{ name_error }}</p>
                 {% endif %}
-                <button type="submit" name="action" value="name">保存</button>
+                <button type="submit" name="action" value="name" class="save-btn">保存</button>
             </form>
         {% else %}
-            <p>{{ user.display_name }} <a href='?edit=1'>✎</a></p>
+            <p class="display-name">
+                {{ user.display_name }}
+                <a href='?edit=1' class="edit-btn">✎</a>
+            </p>
         {% endif %}
     </div>
 
     {# 公開設定 #}
     <div>
-        <form method="post">
+        <form method="post" id="privacy-form">
             {% csrf_token %}
-            <label>
-                <input type="radio" name="is_public" value="True" {% if user.is_public %}checked{% endif %}>
-                公開アカウント
-            </label>
-            <label>
-                <input type="radio" name="is_public" value="False" {% if not user.is_public %}checked{% endif %}>
-                非公開アカウント
-            </label>
-            <button type="submit" name="action" value="privacy">保存</button>
+            <input type="radio" id="public" name="is_public" value="True" {% if user.is_public %}checked{% endif %}>
+                <label for="public" class="privacy-btn">公開アカウント</label>
+            <input type="radio" id="private" name="is_public" value="False" {% if not user.is_public %}checked{% endif %}>
+                <label for="private" class="privacy-btn">非公開アカウント</label>
+            <button id="privacy-save-btn" type="submit" name="action" value="privacy" class="save-btn" style="display:none;">保存</button>
         </form>
     </div>
     
@@ -76,7 +75,41 @@
         </div>
 
         {% empty %}
-            <p>投稿したログがありません。</p>
+            <div class="empty-state">  
+                <p class="empty-message">投稿したログがありません。</p>
+            </div>
         {% endfor %}
     </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const radios = document.querySelectorAll(
+            'input[name="is_public"]'
+        );
+
+        const privacyBtn =
+            document.getElementById('privacy-save-btn');
+
+        const checkedValue =
+            document.querySelector(
+                'input[name="is_public"]:checked'
+            ).value;
+
+        radios.forEach(radio => {
+            radio.addEventListener('change', () => {
+                const current =
+                    document.querySelector(
+                        'input[name="is_public"]:checked'
+                    ).value;
+
+                privacyBtn.style.display =
+                    current !== checkedValue
+                        ? 'inline-flex'
+                        : 'none';
+            });
+        });
+    });
+</script>
 {% endblock %}
