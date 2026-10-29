@@ -3,6 +3,7 @@ from django.views.generic.edit import CreateView
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.shortcuts import render, redirect
 from django.urls import reverse_lazy
+from django.db import transaction
 
 from ..models import Log, Tag, Section, Spot
 from ..forms.log import LogForm, LogCardFormSet, StartSpotForm
@@ -32,6 +33,7 @@ class LogCreateView(LoginRequiredMixin, CreateView):
             context['start_form'] = StartSpotForm(prefix='start')
         return context
 
+    @transaction.atomic
     def form_valid(self, form):
         """
         formの入力値をチェックして、ログとタグを保存する

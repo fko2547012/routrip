@@ -63,7 +63,6 @@
 
 /* カードの箱 */
 .card-box {
-    counter-increment: card;
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 12px;
@@ -80,10 +79,6 @@
     font-size: 13px;
     font-weight: bold;
     color: var(--color-gray-text);
-}
-
-.card-title::before {
-    content: "カード " counter(card);
 }
 
 .card-image {
@@ -122,10 +117,6 @@
 .card-spot {
     grid-column: 1 / -1;
     margin-bottom: 0;
-}
-
-#card-list {
-    counter-reset: card;
 }
 
 .log-create .card-comment textarea {
@@ -174,7 +165,7 @@
 
 .log-create .card-title {
     display: flex;
-    justify-content: space-between;
+    justify-content: flex-end;
     align-items: center;
 }
 
