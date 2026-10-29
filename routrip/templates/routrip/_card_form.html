@@ -39,16 +39,7 @@
     </div>
 
     <div class="card-spot field spot-area">
-      {% if is_edit %}
-        {{ card_form.spot.errors }}
-        
-        <label class="pin-row">
-          <span>📍</span>
-          {{ card_form.spot }}
-        </label>
-      {% else %}
-      {% include 'routrip/_spot_field.html' with spot_form=card_form %}
-      {% endif %}
+      {% include "routrip/_spot_field.html" with spot_form=card_form %}
     </div>
   </div>
 </div>
