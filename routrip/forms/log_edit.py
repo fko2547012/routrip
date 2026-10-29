@@ -6,46 +6,9 @@ from django.forms import BaseInlineFormSet
 
 class EditCardForm(LogCardFormSet.form):
     """
-    移動時間の単位を選択できる編集用フォーム。
+    共通フォームを引継ぐ
     """
-
-    duration_unit = forms.ChoiceField(
-        label="単位",
-        choices=[
-            ("minutes", "分"),
-            ("hours", "時間"),
-        ],
-        initial="minutes",
-        required=False,
-    )
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
-
-        self.fields["spot"].widget = forms.HiddenInput()
-        self.fields["duration"].label = "移動時間"
-        self.fields["duration"].widget.attrs["placeholder"] = "移動時間"
-
-    def clean(self):
-        cleaned = super().clean()
-
-        duration = cleaned.get("duration")
-        unit = cleaned.get("duration_unit") or "minutes"
-
-        if duration is not None:
-            # DBには分で保存する
-            if unit == "hours":
-                duration *= 60
-
-            if duration > 14400:
-                self.add_error(
-                    "duration",
-                    "移動時間は240時間以内で入力してください。",
-                )
-            else:
-                cleaned["duration"] = duration
-        return cleaned
+    pass
 
 
 # 作成時と同じカードフォームを使用する, 編集では並び替えと削除を有効にする
