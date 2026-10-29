@@ -1,14 +1,14 @@
 {{ spot_form.spot.errors }}
 {{ spot_form.new_spot_name.errors }}
 
-<div class="spot-status" aria-live="polite"></div>
 
 <div class="spot-resolved" hidden>
     <span>📍</span>
     <span class="spot-name"></span>
-    {{ spot_form.new_spot_name }}
     <button type="button" class="spot-change">変更</button>
 </div>
+
+<div class="spot-status" aria-live="polite"></div>
 
 <div class="place-search" hidden>
   <p class="spot-candidates-note place-search-note"></p>

@@ -91,7 +91,7 @@ class LogCardForm(ModelForm):
 
     new_spot_name = forms.CharField(
         required=False, max_length=30,      # Spot.name の max_length に合わせる
-        widget=forms.TextInput(attrs={'placeholder': '新しい場所の名前を入力'}))
+        widget=forms.HiddenInput)
     new_spot_lat = forms.FloatField(
         required=False, min_value=-90, max_value=90, widget=forms.HiddenInput)
     new_spot_lng = forms.FloatField(
@@ -177,7 +177,7 @@ class StartSpotForm(forms.Form):
     spot_label = forms.CharField(required=False, widget=forms.HiddenInput)
     new_spot_name = forms.CharField(
         required=False, max_length=30,
-        widget=forms.TextInput(attrs={'placeholder': '新しい場所の名前を入力'}))
+        widget=forms.HiddenInput)
     new_spot_lat = forms.FloatField(
         required=False, min_value=-90, max_value=90, widget=forms.HiddenInput)
     new_spot_lng = forms.FloatField(

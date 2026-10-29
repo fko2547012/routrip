@@ -588,15 +588,13 @@ function spotIsComplete(area) {
   return p.newName.value.trim() !== '' && p.newLat.value !== '' && p.newLng.value !== '';
 }
 
-// 「決まった」状態の表示にする（editable: 新しい場所なので、名前を直せる）
-function showResolved(area, text, editable) {
+// 「決まった」状態の表示にする
+function showResolved(area, text) {
   const p = spotParts(area);
   p.status.textContent = '';
   p.search.hidden = true;
   p.resolved.hidden = false;
-  p.nameLabel.hidden = editable;
   p.nameLabel.textContent = text;
-  p.newName.hidden = !editable;
   area.classList.remove('invalid');
 }
 
@@ -631,18 +629,19 @@ function setDbSpot(area, spot) {
   p.newName.value = '';
   p.newLat.value = '';
   p.newLng.value = '';
-  showResolved(area, spot.name, false);
+  showResolved(area, spot.name);
 }
 
 // 新しい場所に決める（名前は、あとから直せる）
 function setNewSpot(area, name, lat, lng) {
   const p = spotParts(area);
+  const shortName= name.slice(0, 30);
   p.id.value = '';
-  p.label.value = name;
-  p.newName.value = name;
+  p.label.value = shortName;
+  p.newName.value = shortName;
   p.newLat.value = lat;
   p.newLng.value = lng;
-  showResolved(area, '', true);
+  showResolved(area, shortName);
 }
 
 // 最初の状態にする（サーバーのエラーで戻ってきたときは、入っていた内容を表示する）
@@ -651,10 +650,16 @@ function initSpotArea(area) {
   if (p.id.value !== '') {
     showResolved(area, p.label.value || '選択済みのスポット', false);
   } else if (p.newName.value.trim() !== '' && p.newLat.value !== '' && p.newLng.value !== '') {
-    showResolved(area, '', true);
+    showResolved(area, p.newName.value);
   } else {
     showSearch(area, area.dataset.note || NOTE_NO_PHOTO);
   }
+}
+
+// 写真の位置から、自動で決めたときの案内
+function showAutoNote(area) {
+  spotParts(area).status.textContent =
+    '写真の位置から、自動で選びました。間違えている場合は、「変更」で、地名を検索してください';
 }
 
 // 写真の座標から、場所を自動で決める
@@ -674,8 +679,10 @@ async function resolveFromPhoto(area, lat, lng, seq) {
 
   if (data && data.source === 'db') {
     setDbSpot(area, data.spot);
+    showAutoNote(area);
   } else if (data && data.source === 'reverse') {
     setNewSpot(area, data.name, lat, lng);       // 座標は、写真のものを使う
+    showAutoNote(area);
   } else {
     showSearch(area, '場所の名前を取得できませんでした。地名で検索してください');
   }
