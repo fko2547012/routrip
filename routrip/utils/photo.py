@@ -1,5 +1,8 @@
+import io
+import os
+from django.core.files.base import ContentFile
 from datetime import datetime
-from PIL import Image, ExifTags, UnidentifiedImageError
+from PIL import Image, ExifTags, UnidentifiedImageError, ImageOps
 
 def _to_decimal_degrees(dms, reference):
     """
@@ -109,3 +112,35 @@ def get_photo_info(file) -> dict:
             pass
 
     return result
+
+
+MAX_EDGE = 2000        # 長辺の上限（ピクセル）
+JPEG_QUALITY = 85      # JPEGの品質（1〜95。大きいほど、きれいで、重い）
+
+def shrink_photo(uploaded):
+    """
+    写真を、長辺 MAX_EDGE px 以内の JPEG に縮小して返す。
+    うまく読めなかったときは、元のファイルを、そのまま返す。
+    """
+    try:
+        uploaded.seek(0)
+        img = Image.open(uploaded)
+        img = ImageOps.exif_transpose(img)      # 向きを、見た目どおりに直す（EXIFは、消えるため）
+        img.thumbnail((MAX_EDGE, MAX_EDGE))     # 縦横比を保って縮小（小さい写真は、そのまま）
+
+        if img.mode in ('RGBA', 'LA', 'P'):     # 透明部分は、白にする
+            img = img.convert('RGBA')
+            background = Image.new('RGB', img.size, (255, 255, 255))
+            background.paste(img, mask=img.split()[-1])
+            img = background
+        elif img.mode != 'RGB':
+            img = img.convert('RGB')
+
+        buffer = io.BytesIO()
+        img.save(buffer, format='JPEG', quality=JPEG_QUALITY, optimize=True)
+    except Exception:
+        uploaded.seek(0)
+        return uploaded
+
+    name = os.path.splitext(uploaded.name)[0] + '.jpg'
+    return ContentFile(buffer.getvalue(), name=name)

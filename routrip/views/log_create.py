@@ -7,7 +7,7 @@ from django.db import transaction
 
 from ..models import Log, Tag, Section, Spot
 from ..forms.log import LogForm, LogCardFormSet, StartSpotForm
-from ..utils.photo import get_photo_info
+from ..utils.photo import get_photo_info, shrink_photo
 from ..utils.spot import haversine_m
 
 
@@ -80,6 +80,9 @@ class LogCreateView(LoginRequiredMixin, CreateView):
                 card.taken_at = info['taken_at']
                 card.latitude = info['lat']
                 card.longitude = info['lng'] 
+
+                small = shrink_photo(photo)
+                card.image_path.save(small.name, small, save=False)
 
             card.save() # カードを保存
             saved_cards[index] = card  # 保存したカードを記録
