@@ -493,34 +493,23 @@ document.querySelector('#edit-step-2 a.back-button')
 // 保存済みの出発地・スポット名を表示する
 function showSavedSpot(area) {
     const root = area.closest('.card-form, .start-box');
-
     const label = root.querySelector('[name$="-spot_label"]');
     const newName = root.querySelector('[name$="-new_spot_name"]');
-
     const resolved = area.querySelector('.spot-resolved');
     const nameLabel = area.querySelector('.spot-name');
     const search = area.querySelector('.place-search');
-
     const savedName = label ? label.value.trim() : '';
     const newSpotName = newName ? newName.value.trim() : '';
 
-    if (newSpotName) {
-        resolved.hidden = false;
-        search.hidden = true;
-        nameLabel.hidden = true;
-        newName.hidden = false;
-    } else if (savedName) {
-        nameLabel.textContent = savedName;
-        nameLabel.hidden = false;
-        resolved.hidden = false;
-        search.hidden = true;
+    const text = newSpotName || savedName;
 
-        if (newName) {newName.hidden = true;}
-    } else {
-        resolved.hidden = true;
-        search.hidden = false;
-    }
+    nameLabel.textContent = text;
+    nameLabel.hidden = false;
+
+    resolved.hidden = !text;
+    search.hidden = Boolean(text);
 }
+
 
 // 初めて画面を開いたときにも適用する
 logForm.querySelectorAll('.spot-area').forEach(showSavedSpot);
@@ -717,8 +706,8 @@ async function selectEditPlace(area, place) {
             p.newName.value = place.name;
             p.lat.value = place.lat;
             p.lng.value = place.lng;
-            p.nameLabel.hidden = true;
-            p.newName.hidden = false;
+            p.nameLabel.textContent = place.name;
+            p.nameLabel.hidden = false;
         }
 
         p.status.textContent = '';
