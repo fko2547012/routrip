@@ -326,10 +326,13 @@ async function readPhotoInfo(file) {
   let lng = null;
   let takenAt = null;
 
-  //位置情報
+  // 位置情報（失敗しても、撮影日時の読み取りには、影響させない）
   try {
-    const gps = await exifr.gps(file);  // 位置情報が無いと undefined
-    if (gps) {
+    const gps = await exifr.gps(file);
+    // 数字として正しいときだけ使う（NaN や、範囲外の値は、「位置情報なし」として扱う）
+    if (gps
+        && Number.isFinite(gps.latitude) && Math.abs(gps.latitude) <= 90
+        && Number.isFinite(gps.longitude) && Math.abs(gps.longitude) <= 180) {
       lat = gps.latitude;
       lng = gps.longitude;
     }
@@ -339,8 +342,9 @@ async function readPhotoInfo(file) {
   // 撮影日時
   try{
     const meta = await exifr.parse(file, { pick: ['DateTimeOriginal'] });
-    if (meta && meta.DateTimeOriginal) {
-      takenAt = meta.DateTimeOriginal;
+    const taken = meta && meta.DateTimeOriginal;
+    if (taken instanceof Date && !Number.isNaN(taken.getTime())) {
+      takenAt = taken;
     }
   } catch (err) {
     console.error('撮影日時の読み取りに失敗しました:', file.name, err);
