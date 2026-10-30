@@ -365,6 +365,14 @@ function compareByTakenAt(photoA, photoB) {
   return 0;
 }
 
+let pickedPreviewUrls = [];
+// 一覧を空にする（プレビュー用に作った一時的なURLも、解放する）
+function clearPickedList() {
+  pickedPreviewUrls.forEach((url) => URL.revokeObjectURL(url));
+  pickedPreviewUrls = [];
+  pickedList.innerHTML = '';
+}
+
 // 選んだ写真のファイル名を、一覧に出す
 picker.addEventListener('change', () => {
   const token = ++pickToken;
@@ -381,7 +389,7 @@ picker.addEventListener('change', () => {
     pickerError.hidden = true;
   }
 
-  pickedList.innerHTML = '';
+  clearPickedList();
   pickPromise = (async () => {
     await Promise.all(files.map(async (f) => {
       photoInfo.set(f, await readPhotoInfo(f));
@@ -392,11 +400,35 @@ picker.addEventListener('change', () => {
     files.sort(compareByTakenAt);
     pickedFiles = files;
 
-    pickedList.innerHTML = '';
+    clearPickedList();
     files.forEach((f) => {
       const info = photoInfo.get(f);
+
       const li = document.createElement('li');
-      li.textContent = `${f.name} ${info.lat !== null ? '📍位置情報あり' : '位置情報なし'}`;
+      li.className = 'picked-item';
+
+      const img = document.createElement('img');
+      img.className = 'picked-thumb';
+      img.alt = '';
+      img.loading = 'lazy';
+      img.decoding = 'async';
+      const url = URL.createObjectURL(f);        // 画面に表示するための、一時的なURL
+      pickedPreviewUrls.push(url);
+      img.src = url;
+
+      const text = document.createElement('div');
+      text.className = 'picked-text';
+
+      const name = document.createElement('span');
+      name.className = 'picked-name';
+      name.textContent = f.name;                  // ファイル名は、文字として入れる
+
+      const gps = document.createElement('span');
+      gps.className = 'picked-gps';
+      gps.textContent = info.lat !== null ? '📍位置情報あり' : '位置情報なし';
+
+      text.append(name, gps);
+      li.append(img, text);
       pickedList.append(li);
     });
   })();
