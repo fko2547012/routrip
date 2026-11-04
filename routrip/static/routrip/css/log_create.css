@@ -335,6 +335,96 @@
     display: none;
 }
 
+.log-create .map-open-button {
+    display: block;
+    width: 100%;
+    margin-top: 6px;
+    padding: 8px 10px;
+    background: none;
+    border: 1px dashed var(--color-purple);
+    color: var(--color-navy);
+    font-size: 13px;
+    font-weight: normal;
+}
+
+#map-dialog {
+    width: min(92vw, 480px);
+    padding: 12px;
+    border: none;
+    border-radius: var(--radius);
+}
+
+#map-dialog::backdrop {
+    background: rgba(0, 0, 0, 0.5);
+}
+
+#map-canvas {
+    height: 55vh;
+    border-radius: 6px;
+}
+
+#map-dialog .map-note {
+    margin: 0 0 8px;
+    font-size: 13px;
+    color: var(--color-gray-text);
+}
+
+#map-dialog #map-selected {
+    margin: 8px 0 0;
+}
+
+#map-dialog .map-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    margin-top: 10px;
+}
+
+.log-create .pin-step {
+    margin-top: 8px;
+}
+
+.log-create .pin-step[hidden],
+.log-create .pin-choice[hidden],
+.log-create .pin-name-row[hidden] {
+    display: none;
+}
+
+.log-create .pin-choice button {
+    display: block;
+    width: 100%;
+    margin-bottom: 4px;
+    padding: 8px 10px;
+    font-size: 13px;
+}
+
+.log-create .pin-make-new {
+    background: none;
+    border: 1px dashed var(--color-purple);
+    color: var(--color-navy);
+    font-weight: normal;
+}
+
+.log-create .pin-name-row {
+    display: flex;
+    gap: 8px;
+}
+
+.log-create .pin-name-row input {
+    flex: 1;
+    min-width: 0;
+}
+
+.log-create .pin-back {
+    display: block;
+    margin-top: 6px;
+    padding: 6px 12px;
+    background: none;
+    border: 1px solid var(--color-gray-text);
+    color: var(--color-gray-text);
+    font-size: 13px;
+    font-weight: normal;
+}
 /* ==========================
    ログ作成：移動時間
 ========================== */

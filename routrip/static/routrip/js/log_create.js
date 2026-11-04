@@ -614,6 +614,7 @@ function spotParts(area) {
     searchNote: area.querySelector('.place-search-note'),
     query: area.querySelector('.place-query'),
     results: area.querySelector('.place-results'),
+    pin: area.querySelector('.pin-step'),
   };
 }
 
@@ -631,6 +632,7 @@ function showResolved(area, text) {
   p.search.hidden = true;
   p.resolved.hidden = false;
   p.nameLabel.textContent = text;
+  p.pin.hidden = true;
   area.classList.remove('invalid');
 }
 
@@ -640,6 +642,7 @@ function showSearch(area, note) {
   p.resolved.hidden = true;
   p.status.textContent = '';
   p.search.hidden = false;
+  p.pin.hidden = true;
   p.searchNote.textContent = note + NOTE_HINT;
 }
 
@@ -655,6 +658,12 @@ function clearSpot(area) {
   p.results.innerHTML = '';
   p.query.value = '';
   p.status.textContent = '';
+  p.pin.hidden = true;
+  p.pin.querySelector('.pin-name').value = '';
+  p.pin.querySelector('.pin-choice').hidden = true;
+  p.pin.querySelector('.pin-name-row').hidden = true;
+  p.pin.querySelector('.pin-error').hidden = true;
+  delete area.dataset.fromMap;
 }
 
 // 登録済みのスポットに決める
@@ -866,10 +875,19 @@ step2.addEventListener('click', (e) => {
   const area = e.target.closest('.spot-area');
   if (!area) return;
 
-  if (e.target.closest('.spot-change')) {          // 変更：地名で検索し直す
+  if (e.target.closest('.spot-change')) {          // 変更
+    const fromMap = area.dataset.fromMap === '1';
+    const point = fromMap
+      ? { lat: Number(area.dataset.pinLat), lng: Number(area.dataset.pinLng) }
+      : null;
     beginTask(area);
     clearSpot(area);
-    showSearch(area, NOTE_CHANGE);
+    delete area.dataset.fromMap;
+    if (point) {
+      openMap(area, point);                        // 地図で決めたものは、地図に戻る
+    } else {
+      showSearch(area, NOTE_CHANGE);
+    }
     return;
   }
   if (e.target.closest('.place-search-button')) {
@@ -924,4 +942,188 @@ document.getElementById('card-list').addEventListener('click', (e) => {
   renumberCards();       // フォームの番号を、並び順に合わせ直す
   renderThumbs();        // サムネイルの一覧も、作り直す
   card.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+});
+
+
+// ==========================
+// 地図で場所を指定する
+// ==========================
+const mapDialog = document.getElementById('map-dialog');
+const mapSelected = document.getElementById('map-selected');
+const mapConfirm = document.getElementById('map-confirm');
+let leafletMap = null;
+let mapMarker = null;
+let mapPoint = null;          // 選ばれた地点 {lat, lng}
+let mapTargetArea = null;     // どのスポット欄から開いたか
+
+// 地図を、最初に開くときだけ作る
+function ensureMap() {
+  if (leafletMap) return;
+  leafletMap = L.map('map-canvas').setView([36.2, 138.25], 5);       // 日本全体
+  L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    maxZoom: 19,
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+  }).addTo(leafletMap);
+  leafletMap.on('click', (e) => setMapPoint(e.latlng.lat, e.latlng.lng));
+}
+
+// ピンを立てて、座標を表示する
+function setMapPoint(lat, lng) {
+  mapPoint = { lat, lng };
+  if (mapMarker) {
+    mapMarker.setLatLng([lat, lng]);
+  } else {
+    mapMarker = L.marker([lat, lng]).addTo(leafletMap);
+  }
+  mapSelected.textContent = `選んだ場所：${lat.toFixed(5)}、${lng.toFixed(5)}`;
+  mapConfirm.disabled = false;
+}
+
+// 地図を開く（point があれば、そこにピンを立てた状態で開く）
+function openMap(area, point) {
+  mapTargetArea = area;
+  ensureMap();
+
+  if (mapMarker) {
+    mapMarker.remove();
+    mapMarker = null;
+  }
+  mapPoint = null;
+  mapSelected.textContent = '場所が選ばれていません';
+  mapConfirm.disabled = true;
+
+  mapDialog.showModal();
+  setTimeout(() => {
+    leafletMap.invalidateSize();
+    if (point) {
+      leafletMap.setView([point.lat, point.lng], 17);
+      setMapPoint(point.lat, point.lng);                 // 前に置いたピンを、復元する
+      return;
+    }
+    const root = area.closest('.card-form, .start-box');
+    if (root && root.dataset.lat) {
+      leafletMap.setView([Number(root.dataset.lat), Number(root.dataset.lng)], 16);
+    }
+  }, 0);
+}
+
+step2.addEventListener('click', (e) => {
+  const button = e.target.closest('.map-open-button');
+  if (button) openMap(button.closest('.spot-area'));
+});
+
+// 「キャンセル」ボタンで、地図を閉じる
+document.getElementById('map-cancel').addEventListener('click', () => {
+  mapDialog.close();
+  const p = spotParts(mapTargetArea);
+  const decided = p.id.value !== '' || p.newName.value.trim() !== '';
+  if (!decided && p.search.hidden && p.pin.hidden) {      // 何も表示されていないときは、検索欄に戻す
+    showSearch(mapTargetArea, NOTE_CHANGE);
+  }
+});
+
+// 「この場所にする」（今回は、座標を画面に出すだけ）
+mapConfirm.addEventListener('click', () => {
+  if (!mapPoint || !mapTargetArea) return;
+  const area = mapTargetArea;
+  const { lat, lng } = mapPoint;
+  mapDialog.close();
+  startPinStep(area, lat, lng);
+});
+
+// ==========================
+// 地図で選んだ地点に、名前を付ける
+// ==========================
+const PIN_NOTE_NEW =
+  'この場所の名前を付けてください（登録した名前は、ほかのユーザーにも表示されます）';
+
+// 名前の入力欄を出す
+function showPinNameInput(area, suggestion) {
+  const p = spotParts(area);
+  p.status.textContent = '';
+  p.pin.hidden = false;
+  p.pin.querySelector('.pin-note').textContent = PIN_NOTE_NEW;
+  p.pin.querySelector('.pin-choice').hidden = true;
+  p.pin.querySelector('.pin-name-row').hidden = false;
+  p.pin.querySelector('.pin-error').hidden = true;
+  const input = p.pin.querySelector('.pin-name');
+  input.value = String(suggestion || '').slice(0, 30);
+  input.focus();
+}
+
+// 地図で選んだ地点を、確認する
+async function startPinStep(area, lat, lng) {
+  const p = spotParts(area);
+  const seq = beginTask(area);
+  p.search.hidden = true;
+  p.resolved.hidden = true;
+  p.pin.hidden = true;
+  p.status.textContent = '📍 場所を確認しています…';
+  area.dataset.pinLat = lat;
+  area.dataset.pinLng = lng;
+
+  let data = null;
+  try {
+    const res = await fetch(`${resolveUrl}?lat=${lat}&lng=${lng}`);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    data = await res.json();
+  } catch (err) {
+    console.error('場所の確認に失敗しました:', err);
+  }
+  if (!isCurrent(area, seq)) return;
+
+  if (data && data.source === 'db' && data.spot) {
+    // 近くに、登録済みのスポットがある：同じ場所か、聞く
+    area._pinSpot = data.spot;
+    p.status.textContent = '';
+    p.pin.hidden = false;
+    p.pin.querySelector('.pin-note').textContent =
+      `近くに「${data.spot.name}」が登録されています。同じ場所ですか？`;
+    p.pin.querySelector('.pin-use-existing').textContent = `「${data.spot.name}」を使う`;
+    p.pin.querySelector('.pin-choice').hidden = false;
+    p.pin.querySelector('.pin-name-row').hidden = true;
+    p.pin.querySelector('.pin-error').hidden = true;
+    return;
+  }
+  showPinNameInput(area, data && data.source === 'reverse' ? data.name : '');
+}
+
+// 名前を決定する
+function confirmPinName(area) {
+  const p = spotParts(area);
+  const error = p.pin.querySelector('.pin-error');
+  const name = p.pin.querySelector('.pin-name').value.trim();
+  if (!name) {
+    error.textContent = '名前を入力してください';
+    error.hidden = false;
+    return;
+  }
+  setNewSpot(area, name, Number(area.dataset.pinLat), Number(area.dataset.pinLng));
+  area.dataset.fromMap = '1';   // 画面3で、地図から来たことを分けるためのフラグ
+}
+
+step2.addEventListener('click', (e) => {
+  const area = e.target.closest('.spot-area');
+  if (!area) return;
+
+  if (e.target.closest('.pin-use-existing') && area._pinSpot) {
+    setDbSpot(area, area._pinSpot);   // 登録済みのスポットを使う
+    area.dataset.fromMap = '1';   // 画面3で、地図から来たことを分けるためのフラグ
+  } else if (e.target.closest('.pin-make-new')) {
+    showPinNameInput(area, '');   // 別の場所として、名前を付ける
+  } else if (e.target.closest('.pin-back')) {
+    const point = { lat: Number(area.dataset.pinLat), lng: Number(area.dataset.pinLng) };
+    spotParts(area).pin.hidden = true;
+    openMap(area, point);   // 前のピンの位置から、やり直す
+  } else if (e.target.closest('.pin-name-ok')) {
+    confirmPinName(area);
+  }
+});
+
+// 検索欄で Enter を押したときも、検索する（日本語の変換の確定は、除く）
+step2.addEventListener('keydown', (e) => {
+  if (e.key !== 'Enter' || e.isComposing) return;
+  if (!e.target.matches('.pin-name')) return;
+  e.preventDefault();
+  confirmPinName(e.target.closest('.spot-area'));
 });

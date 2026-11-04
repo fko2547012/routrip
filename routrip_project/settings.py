@@ -25,7 +25,7 @@ SECRET_KEY = 'django-insecure-sni*mshuv)kps1vmhe$ip1z40nx=pv+sz+^n7!*tf60@4a(qzh
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
 
 
 # Application definition
@@ -133,3 +133,6 @@ MEDIA_ROOT = BASE_DIR / 'media'
 
 # Login URL
 LOGIN_URL = "routrip:login"
+
+# 
+SECURE_REFERRER_POLICY = 'strict-origin-when-cross-origin'

@@ -3,6 +3,8 @@
 
 {% block extra_css %}
   <link rel="stylesheet" href="{% static 'routrip/css/log_create.css' %}">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+        integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
 {% endblock %}
 
 {% block content %}
@@ -104,6 +106,19 @@
     </p>
   </div>
 </form>
+
+<dialog id="map-dialog">
+  <p class="map-note">地図をタップして、場所を選んでください</p>
+  <div id="map-canvas"></div>
+  <p id="map-selected" class="map-note">場所が選ばれていません</p>
+  <div class="map-actions">
+    <button type="button" id="map-cancel">キャンセル</button>
+    <button type="button" id="map-confirm" disabled>この場所にする</button>
+  </div>
+</dialog>
+
 <script src="https://cdn.jsdelivr.net/npm/exifr@7.1.3/dist/full.umd.js"></script>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+        integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
 <script src="{% static 'routrip/js/log_create.js' %}"></script>
 {% endblock %}
