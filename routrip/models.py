@@ -156,7 +156,7 @@ class Section(models.Model):
     
     from_spot=models.ForeignKey('Spot',
                                     on_delete=models.PROTECT,
-                                    db_column='START_SPOT_ID',
+                                    db_column='FROM_SPOT_ID',
                                     related_name='departing_sections',
                                     verbose_name='出発スポット')
     
