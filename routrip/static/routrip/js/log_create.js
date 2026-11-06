@@ -11,7 +11,7 @@ document.getElementById('add-card').addEventListener('click', () => {
   document.getElementById('card-list').insertAdjacentHTML('beforeend', html);
 
   totalInput.value = index + 1;
-  const newCard = document.getElementById('card-list').lastElementChild;     // ← 足す
+  const newCard = document.getElementById('card-list').lastElementChild;
   initSpotArea(newCard.querySelector('.spot-area')); 
 });
 
@@ -677,7 +677,7 @@ function setDbSpot(area, spot) {
   showResolved(area, spot.name);
 }
 
-// 新しい場所に決める（名前は、あとから直せる）
+// 新しい場所に決める
 function setNewSpot(area, name, lat, lng) {
   const p = spotParts(area);
   const shortName= name.slice(0, 30);
@@ -693,7 +693,7 @@ function setNewSpot(area, name, lat, lng) {
 function initSpotArea(area) {
   const p = spotParts(area);
   if (p.id.value !== '') {
-    showResolved(area, p.label.value || '選択済みのスポット', false);
+    showResolved(area, p.label.value || '選択済みのスポット');
   } else if (p.newName.value.trim() !== '' && p.newLat.value !== '' && p.newLng.value !== '') {
     showResolved(area, p.newName.value);
   } else {
@@ -766,7 +766,7 @@ function resetCard(card) {
   const area = card.querySelector('.spot-area');
   beginTask(area);
   clearSpot(area);
-  card.querySelectorAll('input[type="file"], textarea, select').forEach((el) => {
+  card.querySelectorAll('input[type="file"], textarea').forEach((el) => {
     el.value = '';
   });
   card.querySelectorAll('select').forEach((el) => {
@@ -882,7 +882,6 @@ step2.addEventListener('click', (e) => {
       : null;
     beginTask(area);
     clearSpot(area);
-    delete area.dataset.fromMap;
     if (point) {
       openMap(area, point);                        // 地図で決めたものは、地図に戻る
     } else {
@@ -904,19 +903,12 @@ step2.addEventListener('click', (e) => {
   }
 });
 
-// 検索欄で Enter を押したときも、検索する（日本語の変換の確定は、除く）
+// 検索欄で Enter を押したときも、決定する（日本語の変換の確定は、除く）
 step2.addEventListener('keydown', (e) => {
   if (e.key !== 'Enter' || e.isComposing) return;
   if (!e.target.matches('.place-query')) return;
   e.preventDefault();
   searchPlaces(e.target.closest('.spot-area'));
-});
-
-// 新しい場所の名前を直したら、赤枠を消す
-step2.addEventListener('input', (e) => {
-  if (e.target.matches('[name$="-new_spot_name"]')) {
-    e.target.closest('.spot-area').classList.remove('invalid');
-  }
 });
 
 // 最初から表示されているカードを、準備する
@@ -1022,7 +1014,7 @@ document.getElementById('map-cancel').addEventListener('click', () => {
   }
 });
 
-// 「この場所にする」（今回は、座標を画面に出すだけ）
+// 「この場所にする」ボタンで、地図で選んだ地点を、スポット欄に反映する
 mapConfirm.addEventListener('click', () => {
   if (!mapPoint || !mapTargetArea) return;
   const area = mapTargetArea;
