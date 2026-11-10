@@ -8,19 +8,21 @@ from django.db.models import Q
 from ..models import Log
 
 
-class LogDetailView(LoginRequiredMixin, DetailView):
+class LogDetailView(DetailView):
     model = Log
     template_name = 'routrip/log_detail.html'
     context_object_name = 'log'
     
     def get_queryset(self):
-        #ログを取得する
+        #ログインしてなくても公開ろぐは見れる
+        visible = Q(user__is_public=True)
+        #ログイン中なら自分の非公開ログも見れる
+        if self.request.user.is_authenticated:
+            visible |= Q(user=self.request.user)
         return (
             super().get_queryset()
-            .filter(Q(user__is_public=True)
-                    | Q(user=self.request.user)
-                    )
-        .select_related('user', 'start_spot')
+            .filter(visible)
+            .select_related('user','start_spot')
         )
         
     def get(self, request, *args, **kwargs):
@@ -74,6 +76,7 @@ class LogDetailView(LoginRequiredMixin, DetailView):
         
         #ログのユーザーが自分自身かどうかを判定
         context['is_owner'] = (
+            self.request.user.is_authenticated and
             log.user_id == self.request.user.pk
         )
         
