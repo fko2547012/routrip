@@ -123,18 +123,23 @@
         text-decoration: none;
         color: inherit;
         position:relative;/* 日付の絶対配置の基準にするため */
-        padding: bottom 38px;/* 日付と文字が重ならないように下の余白を広げる */
+        padding: bottom 44px;/* 日付と文字が重ならないように下の余白を広げる */
     }
 
     .log-info{
         flex-grow: 1;
+        min-width: 0;
+        padding-right: 4px;
     }
 
     .log-tags{
         display:flex;
-        flex-wrap:wrap;
+        flex-wrap:nowrap;/*一行にする*/
         gap:6px;
         margin-top:6px;
+        overflow:hidden;/*はみ出た部分を隠す*/
+
+
     }
 
     .log-tag-badge{
@@ -144,12 +149,13 @@
         padding: 2px 8px;
         border-radius: 4px;
         font-weight: 500;
+        flex-shrink: 0; /* タグが縮まないようにする */
     }
 
     /* 右下に配置する投稿日付 */
     .log-date {
         position: absolute;
-        bottom: 12px;
+        bottom: 7px;
         right: 16px;
         font-size: 0.75rem;
         color: #a0aec0;

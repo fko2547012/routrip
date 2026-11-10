@@ -164,3 +164,29 @@ input[type="checkbox"] {
 }
 
 
+/* ==========================
+   新規会員登録フォームの調整
+========================== */
+
+/* パスワードの要件などの注意書き（ヘルプテキストや箇条書き）を小さく薄くする */
+form ul,
+form .helptext {
+    font-size: 11px;
+    color: #8c9ba5; /* 従来より少し薄めのグレー */
+    padding-left: 20px;
+    margin-top: 4px;
+    margin-bottom: 8px;
+    line-height: 1.4;
+}
+
+form small {
+    font-size: 11px;
+    color: #8c9ba5;
+}
+
+/* フォーム内の送信ボタンを右側に配置する */
+form button[type="submit"] {
+    display: block;
+    margin-left: auto; /* 左側のマージンを自動にして右寄せにする */
+    margin-top: 16px;
+}
