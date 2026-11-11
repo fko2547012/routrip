@@ -6,7 +6,7 @@
 <form method="post">
     {% csrf_token %}
     {{ form.as_p }}
-    <button type="submit">登録する</button>
+    <button type="submit" class="form-signup">登録する</button>
 </form>
 
 <p class="auth-switch">すでにアカウントをお持ちの方は <a href="{% url 'routrip:login' %}">ログイン</a></p>

@@ -185,7 +185,7 @@ form small {
 }
 
 /* フォーム内の送信ボタンを右側に配置する */
-form button[type="submit"] {
+.form-signup {
     display: block;
     margin-left: auto; /* 左側のマージンを自動にして右寄せにする */
     margin-top: 16px;
