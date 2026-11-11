@@ -16,6 +16,15 @@ class LogListView(ListView):
     def get_queryset(self):
         queryset = super().get_queryset().order_by('-posted_at')
 
+        visible = Q(user__is_public=True)
+        
+        #ログイン中なら「自分自身の投稿（非公開含む）」も見れる
+        if self.request.user.is_authenticated:
+            visible |= Q(user=self.request.user)
+
+        queryset = super().get_queryset().filter(visible).order_by('-posted_at')
+
+        
         departure=self.request.GET.get('departure','').strip()
         destination=self.request.GET.get('destination','').strip()
         tag_query=self.request.GET.get('tag','').strip()
